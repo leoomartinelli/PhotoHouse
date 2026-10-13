@@ -1,7 +1,6 @@
-//! The PhotoCraft brand mark at the left of the title bar: the app icon (the kitsune,
-//! `assets/app-icon/`, see its README), where Photoshop shows its "Ps" tile. The PNG carries the
-//! icon's rounded corners; it is decoded once per context into a mipmapped texture, so it stays
-//! crisp at the title bar's size on any display scale.
+//! The PhotoHouse brand mark at the left of the title bar and the start-screen mascot.
+//! The PNGs are decoded once per context into mipmapped textures, so they stay
+//! crisp on any display scale.
 
 use egui::{Color32, Context, Id, Rect, TextureHandle, TextureOptions, Ui, pos2};
 use photocraft_codecs::{ChannelLayout, SampleType};
@@ -9,15 +8,22 @@ use photocraft_codecs::{ChannelLayout, SampleType};
 /// 128 px: sharp at 20 pt on a 3× display, and the mipmaps keep it clean at 1×.
 const ICON_PNG: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/128x128/apps/ai.storyteller.photocraft.png");
 
-/// The icon's pixels (one transparent pixel if it couldn't be decoded, which a test rules out).
-fn decode() -> egui::ColorImage {
-    let rgba = photocraft_codecs::decode(ICON_PNG).ok().map(|img| img.convert(ChannelLayout::Rgba, SampleType::U8));
+/// 320 px start-screen mascot character.
+const MASCOT_PNG: &[u8] = include_bytes!("../../../assets/mascot.png");
+
+fn decode_png(bytes: &[u8]) -> egui::ColorImage {
+    let rgba = photocraft_codecs::decode(bytes).ok().map(|img| img.convert(ChannelLayout::Rgba, SampleType::U8));
     match rgba {
         Some(img) if img.data().len() == img.width() as usize * img.height() as usize * 4 => {
             egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.data())
         }
         _ => egui::ColorImage::filled([1, 1], Color32::TRANSPARENT),
     }
+}
+
+/// The icon's pixels (one transparent pixel if it couldn't be decoded, which a test rules out).
+fn decode() -> egui::ColorImage {
+    decode_png(ICON_PNG)
 }
 
 /// The icon texture, uploaded on first use and kept in the context.
@@ -32,6 +38,18 @@ fn texture(ctx: &Context) -> TextureHandle {
     tex
 }
 
+/// The mascot texture for the start screen, uploaded on first use and kept in the context.
+fn mascot_texture(ctx: &Context) -> TextureHandle {
+    let id = Id::new("photohouse-start-mascot");
+    if let Some(tex) = ctx.data(|d| d.get_temp::<TextureHandle>(id)) {
+        return tex;
+    }
+    let options = TextureOptions { mipmap_mode: Some(egui::TextureFilter::Linear), ..TextureOptions::LINEAR };
+    let tex = ctx.load_texture("photohouse-start-mascot", decode_png(MASCOT_PNG), options);
+    ctx.data_mut(|d| d.insert_temp(id, tex.clone()));
+    tex
+}
+
 /// Where the mark was painted this frame (tests and screenshots).
 fn rect_id() -> Id {
     Id::new("photocraft-brand-mark-rect")
@@ -42,6 +60,12 @@ pub fn paint_mark(ui: &Ui, r: Rect) {
     let uv = Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0));
     ui.painter().image(texture(ui.ctx()).id(), r, uv, Color32::WHITE);
     ui.ctx().data_mut(|d| d.insert_temp(rect_id(), r));
+}
+
+/// Paint the PhotoHouse mascot into `r` (square).
+pub fn paint_mascot(ui: &Ui, r: Rect) {
+    let uv = Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0));
+    ui.painter().image(mascot_texture(ui.ctx()).id(), r, uv, Color32::WHITE);
 }
 
 /// The rect the mark was last painted into.
@@ -61,6 +85,13 @@ mod tests {
         // Rounded corners: the corner pixel is transparent, the centre opaque.
         assert_eq!(img.pixels[0].a(), 0);
         assert_eq!(img.pixels[64 * 128 + 64].a(), 255);
+    }
+
+    #[test]
+    fn the_mascot_decodes_cleanly() {
+        let img = decode_png(MASCOT_PNG);
+        assert_eq!(img.size, [320, 320]);
+        assert_eq!(img.pixels[0].a(), 0);
     }
 
     #[test]

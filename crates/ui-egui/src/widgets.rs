@@ -22,7 +22,7 @@ pub fn style_spectrum_popup_menu(ui: &mut Ui) {
     let v = &mut ui.style_mut().visuals;
     v.widgets.hovered.weak_bg_fill = t.accent;
     v.widgets.hovered.bg_fill = t.accent;
-    v.widgets.hovered.fg_stroke = Stroke::new(1.0, Color32::WHITE);
+    v.widgets.hovered.fg_stroke = Stroke::new(1.0, t.primary_text);
     v.widgets.hovered.bg_stroke = Stroke::NONE;
     v.widgets.hovered.corner_radius = CornerRadius::same(3);
 }
@@ -1254,8 +1254,8 @@ pub fn checkbox(ui: &mut Ui, on: &mut bool, label: &str) -> Response {
                 let a = rect.left_center() + vec2(3.0, 0.5);
                 let b = rect.center_bottom() + vec2(-1.0, -3.5);
                 let c = rect.right_top() + vec2(-3.0, 3.5);
-                p.line_segment([a, b], Stroke::new(1.8, Color32::WHITE));
-                p.line_segment([b, c], Stroke::new(1.8, Color32::WHITE));
+                p.line_segment([a, b], Stroke::new(1.8, t.primary_text));
+                p.line_segment([b, c], Stroke::new(1.8, t.primary_text));
             } else {
                 p.rect_filled(rect, 2.0, t.field);
                 p.rect_stroke(rect, 2.0, Stroke::new(1.5, if resp.hovered() { t.text_dim } else { t.text_faint }), StrokeKind::Inside);
@@ -1332,7 +1332,7 @@ mod tests {
                 if tokens.pro {
                     assert_eq!(ui.spacing().button_padding, egui::vec2(10.0, 4.0));
                     assert_eq!(ui.visuals().widgets.hovered.bg_fill, tokens.accent);
-                    assert_eq!(ui.visuals().widgets.hovered.fg_stroke.color, egui::Color32::WHITE);
+                    assert_eq!(ui.visuals().widgets.hovered.fg_stroke.color, tokens.primary_text);
                 } else {
                     assert_eq!(ui.spacing().button_padding, original_padding);
                     assert_eq!(ui.visuals().widgets.hovered.fg_stroke, original_hover);

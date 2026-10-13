@@ -8,6 +8,15 @@ next to them.
 
 ## Bundled in the app
 
+### Customized PhotoHouse installer
+
+| Path | Title | Author | Source | License / authorization |
+|---|---|---|---|---|
+| `packaging/windows/photohouse-setup/assets/mascot.gif` | Animated installer mascot | Not specified by user | User attachment, 2026-10-13 | Explicitly supplied for the customized installer; no separate license supplied. See adjacent README. |
+| `packaging/windows/photohouse.ico` | PhotoHouse installer icon | Project owner | Copy of `assets/app-icon/photocraft.ico` | MIT OR Apache-2.0; `packaging/windows/photohouse-icon-LICENSE.txt` |
+
+### Editor assets
+
 | Path | Title | Author | Source | License |
 |---|---|---|---|---|
 | `crates/ui-egui/src/i18n/el.tsv` | Greek UI translations | PhotoCraft contributors | Original translations of PhotoCraft's English labels | MIT OR Apache-2.0, [`LICENSE-translations.txt`](crates/ui-egui/src/i18n/LICENSE-translations.txt) |
