@@ -198,7 +198,7 @@ impl eframe::App for Setup {
             },
             _ => { ui.painter().text(Pos2::new(center, 584.0), egui::Align2::CENTER_CENTER, "Instalando o PhotoHouse no seu computador…", FontId::proportional(13.0), DIM); },
         }
-        ui.painter().text(Pos2::new(center, 652.0), egui::Align2::CENTER_CENTER, "PHOTOHOUSE  /  0.7.0", FontId::proportional(10.0), Color32::from_gray(90));
+        ui.painter().text(Pos2::new(center, 652.0), egui::Align2::CENTER_CENTER, "PHOTOHOUSE  /  0.8.2", FontId::proportional(10.0), Color32::from_gray(90));
 
         if self.preview && self.screenshot.is_some() && elapsed > Duration::from_secs(2) && !self.shot_requested {
             ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(Default::default())); self.shot_requested = true;

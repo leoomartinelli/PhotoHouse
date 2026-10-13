@@ -12,7 +12,7 @@ $WixDir = (Resolve-Path $WixDir).Path
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 $OutputDir = (Resolve-Path $OutputDir).Path
 $manifest = Join-Path $PSScriptRoot 'photohouse-setup/Cargo.toml'
-$version = '0.7.0'
+$version = '0.8.2'
 $msi = Join-Path $OutputDir "PhotoHouse-$version-x64.msi"
 foreach ($file in @('PhotoHouse.exe', 'photocraft-cli.exe')) {
     if (-not (Test-Path -LiteralPath (Join-Path $BinDir $file))) { throw "Missing $file in $BinDir" }

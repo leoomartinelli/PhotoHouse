@@ -1,4 +1,4 @@
-param([string]$Msi = (Join-Path $PSScriptRoot '../../../dist/PhotoHouse-0.7.0-x64.msi'))
+param([string]$Msi = (Join-Path $PSScriptRoot '../../../dist/PhotoHouse-0.8.2-x64.msi'))
 $ErrorActionPreference = 'Stop'
 $Msi = (Resolve-Path $Msi).Path
 if (Test-Path 'HKCU:/Software/PhotoHouse') { throw 'Existing PhotoHouse installation: refusing to modify it during the test.' }
