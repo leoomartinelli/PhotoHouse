@@ -122,6 +122,7 @@ pub mod links;
 mod liquid_glass_ui;
 pub mod liquify_ui;
 pub mod magnetic_lasso_ui;
+pub mod mascote;
 mod mask_props_ui;
 pub mod mask_thumbs_ui;
 pub mod mask_trash_prompt;
