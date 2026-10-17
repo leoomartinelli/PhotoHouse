@@ -54,6 +54,14 @@ Siga [CONTRIBUTING.md](CONTRIBUTING.md): branch própria, PR para `main` e aprov
 do líder. Vulnerabilidades seguem [SECURITY.md](SECURITY.md).
 Detalhes da publicação estão em [docs/publicacao-house.md](docs/publicacao-house.md).
 
+## Atualizar a base PhotoCraft
+
+As [diretrizes do PhotoHouse](GEMINI.md) e a
+[skill de atualização](.agents/skills/atualizar-photohouse/SKILL.md) estão versionadas
+para consulta da equipe. O procedimento inclui a auditoria de marca e a
+preservação do tema House, Liquid Glass, traduções e instalador Windows.
+Atualizações seguem uma versão definida, branch própria e revisão por PR.
+
 ## Origem e licenças
 
 Baseado em PhotoCraft, por ArtCraft Team e seus contribuidores. PhotoHouse é uma
