@@ -8,14 +8,20 @@ ou alterações no aplicativo.
 ## Abrir o preview
 
 Abra `index.html` no navegador ou sirva esta pasta com um servidor estático.
-O percentual avança de 000 a 100 em aproximadamente 10 segundos. Use **Repetir
-animação** para reiniciar. O progresso é simulado; ainda não mede a inicialização.
-Com movimento reduzido ativado no sistema, exibe diretamente o estado concluído
-e usa a ilustração estática no lugar do GIF.
+O percentual e os quadros do Housinho compartilham uma reprodução de 4,16 segundos.
+000% mostra o primeiro quadro; 100% mostra o último quadro e interrompe a reprodução.
+Use **Repetir animação** para reiniciar ambos. O progresso ainda é demonstrativo;
+não mede a inicialização do editor. Com movimento reduzido, mostra diretamente
+100% e o quadro final, sem animar.
+
+Compare as versões **Preto** e **Off-white** pelos botões abaixo da janela.
+As duas usam a mesma linha de tempo; alternar a versão mantém o progresso atual.
 
 ## Direção atual
 
-- Fundo preto e destaques verde neon `#BFFE00`, com luz ao redor da janela.
+- Duas versões para revisão: preto com texto claro e off-white com texto preto.
+- Destaques verde neon `#BFFE00` preservados como segundo nível da hierarquia,
+  com luz ao redor da janela nas duas versões.
 - Família Roboto; carregamento à esquerda e percentual ajustado à largura da barra.
 - Housinho à direita, com a ilustração inteira e suas proporções preservadas.
 - Janela de proporção 3:2, próxima do estudo inicial, com GIF vertical 490 × 566.
@@ -24,9 +30,21 @@ e usa a ilustração estática no lugar do GIF.
 - Textos auxiliares, divisória central e rodapé do primeiro estudo removidos.
 
 Roboto é solicitado ao Google Fonts apenas neste estudo e há fallback para Arial.
-Nenhum arquivo de fonte é incluído. O GIF fornecido pelo solicitante foi incorporado
-sem alterações: 52 quadros de 80 ms, duração de 4,16 segundos e repetição contínua.
-A arte estática anterior foi mantida para a preferência de movimento reduzido.
+Nenhum arquivo de fonte é incluído. O GIF original do solicitante foi preservado.
+Para controlar os quadros e parar no final, o preview desenha os 52 quadros de
+`assets/housinho-frames.webp` em canvas, usando o mesmo progresso da contagem.
+O sprite contém oito colunas e sete linhas; as últimas quatro células ficam vazias.
+O GIF em loop não é mais reproduzido diretamente. A arte estática anterior segue
+versionada como referência.
+
+## Verificação e geração dos quadros
+
+Execute `node docs/design/photohouse-loading/check.cjs` na raiz do repositório.
+O teste verifica as duas versões em 0%, 50%, 99% e 100%, a ausência de loop ao
+concluir, o reinício, movimento reduzido e falha ao carregar os quadros.
+
+Para regenerar o sprite do GIF original: `python docs/design/photohouse-loading/build_frames.py`
+(requer Pillow apenas como ferramenta de desenvolvimento; sem dependência do editor).
 
 ## Próximos commits nesta PR
 
