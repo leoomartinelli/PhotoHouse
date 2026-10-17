@@ -1,18 +1,38 @@
 name: CI da House
 
+# Economia de minutos (plano Free da org: 2.000 min/mês):
+# - mudanças só de documentação não disparam o CI (paths-ignore);
+# - PR em rascunho não roda os jobs pesados;
+# - Windows só roda fora de PR (push na main, manual e semanal);
+# - "Arquivos de referência" só roda em PR quando mexe nos crates de formato/render ou no xtask.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "book/**"
+      - ".agents/**"
+      - "LICENSE*"
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "book/**"
+      - ".agents/**"
+      - "LICENSE*"
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1" # segunda, 03:00 em Brasília
 
 permissions:
   contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: true
 
 env:
   PHOTOCRAFT_NO_PRINT: "1"
@@ -20,16 +40,29 @@ env:
 
 jobs:
   rust:
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # Em PR só Linux. O Windows entra no push na main, no manual e no semanal.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest", "windows-latest"]') }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: ${{ matrix.os == 'windows-latest' && 30 || 40 }}
+    env:
+      # Menos disco e menos trabalho no linker (Bus error no ld do Ubuntu, #6).
+      CARGO_INCREMENTAL: "0"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_TEST_DEBUG: "0"
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Liberar disco no Linux
+        if: runner.os == 'Linux'
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
       - name: Dependências Linux
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libx11-dev libxi-dev libxrandr-dev libxcursor-dev libxinerama-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libudev-dev libfontconfig1-dev libgtk-3-dev
@@ -38,6 +71,8 @@ jobs:
           components: rustfmt, clippy
           targets: wasm32-unknown-unknown
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
       - name: Formatação
         run: cargo fmt --all -- --check
       - name: Testes
@@ -52,10 +87,47 @@ jobs:
         if: runner.os == 'Linux'
         run: cargo xtask wasm
 
+  # Só em PR: diz se o PR mexe no que os testes de corpus cobrem.
+  mudancas:
+    name: Mudanças
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      corpus: ${{ steps.filtro.outputs.corpus }}
+    steps:
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filtro
+        with:
+          # Crates de corpus (xtask/src/corpus.rs: CORPUS_CRATES) e caminhos críticos (CRITICAL).
+          filters: |
+            corpus:
+              - "crates/psd/**"
+              - "crates/io/**"
+              - "crates/codecs/**"
+              - "crates/heif/**"
+              - "crates/compose/**"
+              - "crates/gpu/**"
+              - "crates/text/**"
+              - "crates/format/**"
+              - "crates/affinity/**"
+              - "crates/raw/**"
+              - "crates/engine/**"
+              - "xtask/**"
+              - "Cargo.toml"
+              - "Cargo.lock"
+              - ".github/workflows/ci.yml"
+
   corpus:
     name: Arquivos de referência
+    needs: mudancas
+    # No PR, só quando o filtro acima acha mudança. Fora de PR, sempre.
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || needs.mudancas.outputs.corpus == 'true') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 40
     env:
       CARGO_PROFILE_RELEASE_LTO: "false"
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: "16"
@@ -67,6 +139,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: corpus
+          cache-on-failure: true
       - uses: actions/cache@v4
         with:
           path: corpus/
