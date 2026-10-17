@@ -3,7 +3,8 @@ name: CI da House
 # Economia de minutos (plano Free da org: 2.000 min/mês):
 # - mudanças só de documentação não disparam o CI (paths-ignore);
 # - PR em rascunho não roda os jobs pesados;
-# - Windows só roda fora de PR (push na main, manual e semanal);
+# - Windows só roda fora de PR (push na main, manual e semanal) e só compila (build + clippy):
+#   compilar os testes passava de 30 min e nenhum teste chegava a rodar;
 # - "Arquivos de referência" só roda em PR quando mexe nos crates de formato/render ou no xtask.
 on:
   push:
@@ -47,7 +48,8 @@ jobs:
         # Em PR só Linux. O Windows entra no push na main, no manual e no semanal.
         os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest"]' || '["ubuntu-latest", "windows-latest"]') }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: ${{ matrix.os == 'windows-latest' && 30 || 40 }}
+    # Windows: a 1ª execução enche o cache (que só é salvo no fim). Linux: o job já levava ~37 dos 40 min.
+    timeout-minutes: ${{ matrix.os == 'windows-latest' && 45 || 60 }}
     env:
       # Menos disco e menos trabalho no linker (Bus error no ld do Ubuntu, #6).
       CARGO_INCREMENTAL: "0"
@@ -74,12 +76,15 @@ jobs:
         with:
           cache-on-failure: true
       - name: Formatação
+        if: runner.os == 'Linux'
         run: cargo fmt --all -- --check
       - name: Testes
+        if: runner.os == 'Linux'
         run: cargo test --workspace --locked
       - name: Lint
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Camadas
+        if: runner.os == 'Linux'
         run: cargo xtask layers
       - name: Build do editor e CLI
         run: cargo build --locked -p photocraft -p photocraft-cli
