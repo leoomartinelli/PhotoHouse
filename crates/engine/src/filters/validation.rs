@@ -10,6 +10,7 @@ enum Rule {
     Unsigned(u64),
     Choice(&'static str),
     Bool,
+    Color,
 }
 
 impl Rule {
@@ -19,6 +20,11 @@ impl Rule {
             Self::Unsigned(max) => value.as_u64().is_some_and(|n| n <= max),
             Self::Choice(choices) => value.as_str().is_some_and(|s| choices.split('|').any(|choice| choice == s)),
             Self::Bool => value.is_boolean(),
+            Self::Color => match value {
+                Value::Array(a) if a.len() >= 3 => a.iter().all(|v| v.as_f64().is_some_and(|n| n.is_finite() && (0.0..=1.0).contains(&n))),
+                Value::String(s) if s.len() == 7 && s.starts_with('#') => s[1..].chars().all(|c| c.is_ascii_hexdigit()),
+                _ => false,
+            },
         }
     }
 
@@ -29,6 +35,7 @@ impl Rule {
             Self::Unsigned(max) => format!("an integer in 0..{max}"),
             Self::Choice(choices) => format!("one of {choices}"),
             Self::Bool => "a boolean".into(),
+            Self::Color => "a colour (#rrggbb or [r, g, b(, a)])".into(),
         }
     }
 }
@@ -36,7 +43,7 @@ impl Rule {
 // The bounds and choices are the core filters' public dialog-unit contract. Defaults remain in
 // params_for; gallery filters are checked in gallery_cmds.
 fn fields(id: &str) -> Option<&'static [(&'static str, Rule)]> {
-    use Rule::{Bool, Choice, Number, Unsigned};
+    use Rule::{Bool, Choice, Color, Number, Unsigned};
     Some(match id {
         "filter.blur.gaussianBlur" | "filter.other.highPass" => &[("radius", Number(0.1, 1000.0))],
         "filter.blur.boxBlur" => &[("radius", Number(1.0, 2000.0))],
@@ -73,6 +80,21 @@ fn fields(id: &str) -> Option<&'static [(&'static str, Rule)]> {
         ],
         "filter.distort.ripple" => &[("amount", Number(-999.0, 999.0)), ("size", Choice("small|medium|large"))],
         "filter.distort.polarCoordinates" => &[("mode", Choice("rectangularToPolar|polarToRectangular"))],
+        "filter.distort.liquidGlass" => &[
+            ("offsetX", Number(-100000.0, 100000.0)),
+            ("offsetY", Number(-100000.0, 100000.0)),
+            ("shape", Choice("auto|roundedRect|circle|capsule")),
+            ("cornerRadius", Number(0.0, 2000.0)),
+            ("thickness", Number(1.0, 200.0)),
+            ("refraction", Number(-100.0, 100.0)),
+            ("dispersion", Number(0.0, 100.0)),
+            ("rimLight", Number(0.0, 200.0)),
+            ("specular", Number(0.0, 200.0)),
+            ("lightAngle", Number(-180.0, 180.0)),
+            ("blur", Number(0.0, 50.0)),
+            ("tintOpacity", Number(0.0, 100.0)),
+            ("tintColor", Color),
+        ],
         "filter.other.minimum" | "filter.other.maximum" => &[("radius", Number(0.2, 500.0)), ("preserve", Choice("squareness|roundness"))],
         "filter.other.offset" => &[
             // The hint specifies pixels, with no range: keep the existing rounding/saturation.

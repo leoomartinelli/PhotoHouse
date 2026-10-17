@@ -1000,6 +1000,13 @@ fn dispatch(app: &mut PhotocraftApp, ctx: &egui::Context, req: &ControlRequest) 
                     }
                     continue;
                 }
+                // The glass editor owns canvas gestures without touching the source layer.
+                if let Some(d) = app.ui.dialogs.last_mut().filter(|d| crate::liquid_glass_ui::owns(&d.fields)) {
+                    if !space && !secondary && button != "middle" {
+                        crate::liquid_glass_ui::drag(&mut d.fields, [x, y], matches!(ev, ToolEvent::Down { .. }), !matches!(ev, ToolEvent::Up { .. }));
+                    }
+                    continue;
+                }
                 // Curves' modal eyedroppers use document coordinates here, matching the native
                 // canvas path after its ViewXform conversion. Sample on press only.
                 if !secondary && crate::adjust_dialog::picker_armed(app) {

@@ -1,8 +1,24 @@
 # Instalador PhotoHouse para Windows
 
-O artefato para compartilhar é `dist/PhotoHouse-Setup-0.7.0-x64.exe` na pasta
+O artefato para compartilhar é `dist/PhotoHouse-Setup-0.8.2-LiquidGlass-x64.exe` na pasta
 externa do projeto. É um instalador offline: contém o MSI, o editor, o CLI e o GIF.
 Requer Windows 10/11 de 64 bits. Não requer Rust, WiX ou .NET no computador de destino.
+
+Este pacote foi recompilado a partir de todo o código local atual, incluindo o
+Liquid Glass não destrutivo: objeto inteligente, Smart Filter editável e arrasto
+com refração do fundo em tempo real. A versão interna continua 0.8.2; o sufixo
+LiquidGlass distingue o arquivo para distribuição. O build padrão produz também
+`PhotoHouse-Setup-0.8.2-x64.exe`, com os mesmos bytes.
+
+Validação desta atualização: compilação release de editor/CLI; sete testes de
+Liquid Glass e três testes do frontend; MSI validado pelo WiX; extração do MSI e
+comparação dos hashes dos executáveis; execução do CLI extraído com o comando e
+os parâmetros de movimento do Liquid Glass; MSI embutido no EXE idêntico ao validado;
+captura e revisão da tela real com fundo #161616. O teste de instalação/upgrade
+foi impedido pela proteção do script, pois existe uma instalação do usuário.
+Ela foi preservada. Os testes de instalação da seção histórica abaixo referem-se
+ao pacote anterior. Evidências atuais: `dist/build-manifest-0.8.2-liquid-glass.json`,
+`dist/payload-verification.json` e `dist/installer-preview-0.8.2.png`.
 
 Ao abrir, mostra o GIF original, a frase “Quase lá, estou instalando o seu app!”
 em Segoe UI (com fallback embutido) e uma barra animada verde `#BFFE00`. A barra é

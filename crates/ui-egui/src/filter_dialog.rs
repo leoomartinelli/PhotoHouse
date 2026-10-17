@@ -175,6 +175,8 @@ fn is_pixel_param(key: &str) -> bool {
             | "speed"
             | "shadowRadius"
             | "highlightRadius"
+            | "thickness"
+            | "cornerRadius"
     )
 }
 
@@ -183,7 +185,7 @@ fn is_pixel_param(key: &str) -> bool {
 /// Correction's perspective `horizontal` / `vertical` (-100..100). Scaled by the proxy factor,
 /// their preview drew a quarter-size tree and a quarter of the perspective (#2063).
 fn is_pixel_param_of(command: &str, key: &str) -> bool {
-    is_pixel_param(key)
+    (is_pixel_param(key) || (command == "filter.distort.liquidGlass" && key == "refraction"))
         && !matches!((command, key), ("filter.render.tree" | "filter.render.pictureFrame", "size") | ("filter.lensCorrection", "horizontal" | "vertical"))
 }
 
@@ -466,6 +468,11 @@ pub fn open(app: &mut PhotocraftApp, command: &str) -> Option<u64> {
         let names: Vec<String> = app.session.documents().iter().map(|d| d.doc.name.clone()).collect();
         fields.insert("__docs".into(), json!(names));
     }
+    if command == crate::liquid_glass_ui::COMMAND {
+        fields.insert("offsetX".into(), json!(0));
+        fields.insert("offsetY".into(), json!(0));
+        crate::liquid_glass_ui::init(app, &mut fields);
+    }
     let id = app.ui.open_dialog(crate::state::DialogKind::Command, fields);
     Some(id)
 }
@@ -649,6 +656,9 @@ pub fn body(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
             None => return,
         },
     };
+    if crate::liquid_glass_ui::owns(f) {
+        ui.label(tl!("Drag the glass on the canvas to reposition it."));
+    }
     if crate::select_mask_view::owns(f) {
         crate::select_mask_view::controls(ui, f);
     }
@@ -666,9 +676,16 @@ pub fn body(ui: &mut egui::Ui, f: &mut Map<String, Value>) {
                 let enabled = !(cmd == REPLACE_COLOR && p.key == "range") || f.get("localized").and_then(Value::as_bool) == Some(true);
                 let unit = if is_pixel_param_of(&cmd, &p.key) {
                     "px"
-                } else if p.key == "angle" {
+                } else if p.key == "angle" || p.key == "lightAngle" {
                     "°"
-                } else if p.key == "amount" && max <= 500.0 {
+                } else if (p.key == "amount"
+                    || p.key == "refraction"
+                    || p.key == "dispersion"
+                    || p.key == "rimLight"
+                    || p.key == "specular"
+                    || p.key == "tintOpacity")
+                    && max <= 500.0
+                {
                     "%"
                 } else {
                     ""
@@ -846,6 +863,18 @@ pub fn params_of(f: &Map<String, Value>) -> Value {
     Value::Object(f.iter().filter(|(k, v)| !k.starts_with("__") && !unset(k, v)).map(|(k, v)| (k.clone(), v.clone())).collect())
 }
 
+/// The worker must know whether this dialog edits an existing smart filter.
+pub(crate) fn preview_params_of(f: &Map<String, Value>) -> Value {
+    let mut params = params_of(f);
+    if crate::liquid_glass_ui::owns(f)
+        && let Some(target) = f.get("__smartFilter")
+        && let Some(p) = params.as_object_mut()
+    {
+        p.insert("__smartFilter".into(), target.clone());
+    }
+    params
+}
+
 /// Compute a preview document: run `command` with `params` on the proxy (scaled) copy of `doc`.
 pub fn preview_document(doc: &Document, active: Option<photocraft_doc::LayerId>, command: &str, params: &Value, k: u32) -> Option<Document> {
     preview_document_with(doc, active, command, params, k, None)
@@ -883,7 +912,7 @@ pub(crate) fn preview_document_for_target(
     }
     // Warp Text renders the type again from the layer model (font size, position), which a
     // reduced proxy doesn't scale: it runs at full size and the result is reduced (#218).
-    let (run_k, reduce_k) = if command == "type.warpText" { (1, k) } else { (k, 1) };
+    let (run_k, reduce_k) = if command == "type.warpText" || command == crate::liquid_glass_ui::COMMAND { (1, k) } else { (k, 1) };
     let proxy = crate::proxy::proxy_document(doc, run_k);
     let mut s = photocraft_engine::Session::new();
     s.set_inline_job_ctx(cancel.cloned());
@@ -921,7 +950,12 @@ pub(crate) fn preview_document_for_target(
     if command.starts_with("filter.blurGallery.") {
         crate::blur_pins::scale_for_proxy(&mut p, run_k);
     }
-    s.execute(command, p).ok()?;
+    let smart_target = if command == crate::liquid_glass_ui::COMMAND { p.as_object_mut().and_then(|p| p.remove("__smartFilter")) } else { None };
+    if let Some(target) = smart_target {
+        s.execute("layer.smartFilter.setParams", json!({"layer": target["layer"], "index": target["index"], "params": p})).ok()?;
+    } else {
+        s.execute(command, p).ok()?;
+    }
     s.active().map(|d| crate::proxy::proxy_document(&d.doc, reduce_k))
 }
 

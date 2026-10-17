@@ -3869,3 +3869,16 @@ cameraData	Lens	Lens
 	Ink Characteristics	Mürekkep Özellikleri
 	Solidity:	Doluluk:
 	Redrawing	Yeniden çiziliyor
+
+# Liquid Glass
+	Light Angle	Işık Açısı
+	Rounded Rect	Yuvarlatılmış Dikdörtgen
+	Liquid Glass…	Sıvı Cam…
+	Capsule	Kapsül
+	Specular	Yansıma
+	Rim Light	Kenar Işığı
+	Refraction	Kırılma
+	Liquid Glass	Sıvı Cam
+	Dispersion	Dağılma
+	Tint Opacity	Ton Opaklığı
+	Drag the glass on the canvas to reposition it.	Konumunu değiştirmek için camı tuval üzerinde sürükleyin.

@@ -431,6 +431,9 @@ fn map_from_document(doc: &Document, layer: Option<u64>) -> Option<algo::Image> 
 /// Resolves inputs that live outside the target layer: Displace's map (`mapPath`, or
 /// `mapDocument` index with optional `mapLayer` id).
 pub(crate) fn resolve(s: &Session, fp: &mut FilterParams, p: &Value) -> Result<()> {
+    if matches!(fp, FilterParams::LiquidGlass { .. }) {
+        return Ok(());
+    }
     let FilterParams::Displace { map, .. } = fp else { return Ok(()) };
     if map.is_some() {
         return Ok(());
@@ -451,6 +454,58 @@ pub(crate) fn resolve(s: &Session, fp: &mut FilterParams, p: &Value) -> Result<(
     };
     *map = Some(Arc::new(img.ok_or_else(|| EngineError::Other("the displacement map is empty".into()))?));
     Ok(())
+}
+
+/// Composite only layers below the target, retaining ancestor group semantics.
+pub(crate) fn glass_backdrop(doc: &Document, id: photocraft_doc::LayerId, region: Rect) -> Option<algo::Image> {
+    let path = doc.path_of(id)?;
+    let mut below = doc.clone();
+    fn trim(layers: &mut Vec<Layer>, path: &[usize]) {
+        if let Some((&index, rest)) = path.split_first() {
+            if rest.is_empty() {
+                layers.truncate(index);
+            } else {
+                layers.truncate(index + 1);
+                if let Some(children) = layers.get_mut(index).and_then(Layer::children_mut) {
+                    trim(children, rest);
+                }
+            }
+        }
+    }
+    trim(&mut below.layers, &path);
+    let buf = photocraft_compose::render(&below, region.intersect(&doc.bounds()));
+    if !buf.px.iter().any(|p| p[3] > 0.0) {
+        return None;
+    }
+    Some(algo::Image { rect: buf.rect, ch: 4, data: buf.px.iter().flatten().copied().collect() })
+}
+
+pub(crate) fn apply_glass(
+    doc: &Document,
+    id: photocraft_doc::LayerId,
+    params: &Value,
+    src: &photocraft_raster::Surface,
+    selection: Option<&photocraft_raster::Surface>,
+) -> Option<photocraft_raster::Surface> {
+    let offset = |key: &str| params.get(key).and_then(Value::as_f64).unwrap_or(0.0).clamp(-100000.0, 100000.0).round() as i32;
+    let shifted;
+    let src = if offset("offsetX") != 0 || offset("offsetY") != 0 {
+        shifted = photocraft_algo::resample::translate_surface(src, offset("offsetX"), offset("offsetY"));
+        &shifted
+    } else {
+        src
+    };
+    let content = src.content_bounds();
+    let bounds = selection.map(photocraft_raster::Surface::content_bounds).filter(|r| !r.is_empty()).unwrap_or(content);
+    if bounds.is_empty() {
+        return Some(src.clone());
+    }
+    let mut fp = crate::filters::params_for("filter.distort.liquidGlass", params)?;
+    if let FilterParams::LiquidGlass { backdrop, refraction, blur, .. } = &mut fp {
+        let margin = (refraction.abs() + *blur * 3.0).ceil() as i32 + 4;
+        *backdrop = glass_backdrop(doc, id, content.inflate(margin)).map(Arc::new);
+    }
+    Some(algo::apply_in(src, &fp, content.union(&bounds), bounds, selection, doc.bounds().union(&content)))
 }
 
 fn map_path(p: &Value) -> Option<&str> {

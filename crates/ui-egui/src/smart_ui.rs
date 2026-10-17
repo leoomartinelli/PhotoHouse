@@ -140,7 +140,7 @@ pub fn filter_rows(app: &mut PhotocraftApp, ui: &mut egui::Ui, l: &Layer, depth:
             }
         }
         if let Some(i) = index
-            && resp.double_clicked()
+            && (resp.double_clicked() || (resp.clicked() && sm.smart_filters.get(i).is_some_and(|f| f.command == crate::liquid_glass_ui::COMMAND)))
         {
             open_editor(app, ui.ctx(), l.id.0, sm, i);
         }
@@ -293,7 +293,11 @@ pub fn open_editor(app: &mut PhotocraftApp, ctx: &egui::Context, layer: u64, sm:
     let Some(id) = crate::filter_dialog::open(app, &f.command) else { return };
     if let Some(d) = app.ui.dialog_mut(id) {
         // The live preview would stack a second copy of the filter on the smart object.
-        d.fields.remove("__preview");
+        if f.command == crate::liquid_glass_ui::COMMAND {
+            d.fields.insert("__preview".into(), json!(true));
+        } else {
+            d.fields.remove("__preview");
+        }
         d.fields.insert("__smartFilter".into(), json!({"layer": layer, "index": index}));
         if let Value::Object(p) = &f.params {
             for (k, v) in p {
@@ -301,6 +305,15 @@ pub fn open_editor(app: &mut PhotocraftApp, ctx: &egui::Context, layer: u64, sm:
                     d.fields.insert(k.clone(), v.clone());
                 }
             }
+        }
+    }
+    if f.command == crate::liquid_glass_ui::COMMAND
+        && let Some(d) = app.ui.dialog_mut(id)
+    {
+        let mut fields = d.fields.clone();
+        crate::liquid_glass_ui::init(app, &mut fields);
+        if let Some(d) = app.ui.dialog_mut(id) {
+            d.fields = fields;
         }
     }
 }

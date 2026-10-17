@@ -3745,3 +3745,16 @@ navigator	Zoom	Zvětšení
 @plural	{n} action|{n} actions	{n} akce|{n} akce|{n} akcí
 	Auto Add/Delete	Automaticky přidat/odstranit
 	ICO is limited to 256 × 256 pixels	ICO je omezen na 256 × 256 pixelů
+
+# Liquid Glass
+	Light Angle	Úhel světla
+	Rounded Rect	Zaoblený obdélník
+	Liquid Glass…	Tekuté sklo…
+	Capsule	Kapsle
+	Specular	Odlesk
+	Rim Light	Okrajové světlo
+	Refraction	Lom
+	Liquid Glass	Tekuté sklo
+	Dispersion	Rozptyl
+	Tint Opacity	Krytí tónování
+	Drag the glass on the canvas to reposition it.	Přetažením skla na plátně změňte jeho polohu.

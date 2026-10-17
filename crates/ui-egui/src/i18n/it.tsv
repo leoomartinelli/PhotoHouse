@@ -4100,3 +4100,20 @@ navigator	Zoom	Zoom
 @plural	{n} action|{n} actions	{n} azione|{n} azioni
 	Auto Add/Delete	Aggiungi/elimina automaticamente
 	ICO is limited to 256 × 256 pixels	ICO è limitato a 256 × 256 pixel
+
+# Liquid Glass
+	Light Angle	Angolo luce
+	Rounded Rect	Rettangolo arrotondato
+	Liquid Glass…	Vetro liquido…
+	Capsule	Capsula
+	Specular	Speculare
+	Rim Light	Luce bordo
+	Refraction	Rifrazione
+	Liquid Glass	Vetro liquido
+	Dispersion	Dispersione
+	Tint Opacity	Opacità tinta
+	Corner Radius	Raggio dell'angolo
+
+	Offset X	Spostamento X
+	Offset Y	Spostamento Y
+	Drag the glass on the canvas to reposition it.	Trascina il vetro sulla tela per riposizionarlo.

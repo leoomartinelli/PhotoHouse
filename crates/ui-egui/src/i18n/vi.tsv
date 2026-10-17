@@ -3624,3 +3624,16 @@ curves	Smooth	Làm mượt
 	Choose a gradient file (.grd).	Chọn tệp chuyển sắc (.grd).
 	Auto Add/Delete	Tự động thêm/xóa
 	ICO is limited to 256 × 256 pixels	ICO giới hạn ở 256 × 256 pixel
+
+# Liquid Glass
+	Light Angle	Góc ánh sáng
+	Rounded Rect	Hình chữ nhật bo góc
+	Liquid Glass…	Kính lỏng…
+	Capsule	Hình con nhộng
+	Specular	Phản chiếu
+	Rim Light	Ánh sáng viền
+	Refraction	Khúc xạ
+	Liquid Glass	Kính lỏng
+	Dispersion	Tán sắc
+	Tint Opacity	Độ mờ màu sắc
+	Drag the glass on the canvas to reposition it.	Kéo kính trên khung vẽ để thay đổi vị trí.

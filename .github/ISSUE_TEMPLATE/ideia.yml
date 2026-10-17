@@ -1,0 +1,33 @@
+name: Propor uma ideia
+description: Uma ideia nova pra House, com o que entra e o que fica de fora.
+title: "[IDEIA] "
+labels: ["ideia"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideia boa fica mais clara quando a gente sabe por que ela importa. Conta do seu jeito.
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Por que isso importa pra House.
+      placeholder: A equipe perde tempo toda semana refazendo a mesma legenda.
+    validations:
+      required: true
+  - type: textarea
+    id: escopo
+    attributes:
+      label: Escopo
+      description: O que entra nesta ideia.
+      placeholder: Um jeito simples de guardar legendas que a gente reutiliza.
+    validations:
+      required: true
+  - type: textarea
+    id: fora-de-escopo
+    attributes:
+      label: Fora de escopo
+      description: O que não entra. Ajuda a ideia a não crescer demais.
+      placeholder: Não entra publicar sozinho nas redes.
+    validations:
+      required: true

@@ -3139,3 +3139,17 @@ curves	Smooth	Lisser
 @plural	{n} action|{n} actions	{n} action|{n} actions
 	Auto Add/Delete	Ajout/suppr. auto
 	ICO is limited to 256 × 256 pixels	Le format ICO est limité à 256 × 256 pixels
+
+# Liquid Glass
+	Light Angle	Angle de lumière
+	Rounded Rect	Rectangle arrondi
+	Liquid Glass…	Verre liquide…
+	Capsule	Capsule
+	Specular	Spéculaire
+	Rim Light	Lumière de contour
+	Refraction	Réfraction
+	Liquid Glass	Verre liquide
+	Dispersion	Dispersion
+	Tint Opacity	Opacité de la teinte
+	Tint Color	Couleur de la teinte
+	Drag the glass on the canvas to reposition it.	Faites glisser le verre sur la zone de travail pour le repositionner.

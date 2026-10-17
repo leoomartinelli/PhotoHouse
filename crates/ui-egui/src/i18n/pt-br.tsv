@@ -3927,3 +3927,20 @@ layerLabel	No Color	Sem cor
 @plural	{n} action|{n} actions	{n} ação|{n} ações
 	Auto Add/Delete	Adicionar/excluir automaticamente
 	ICO is limited to 256 × 256 pixels	ICO é limitado a 256 × 256 pixels
+
+# Liquid Glass
+	Liquid Glass…	Vidro Líquido…
+	Liquid Glass	Vidro Líquido
+	Corner Radius	Raio dos Cantos
+	Refraction	Refração
+	Dispersion	Dispersão
+	Rim Light	Luz de Borda
+	Specular	Especular
+	Light Angle	Ângulo da Luz
+	Tint Opacity	Opacidade do Tingimento
+	Rounded Rect	Retângulo Arredondado
+	Capsule	Cápsula
+
+	Drag the glass on the canvas to reposition it.	Arraste o vidro na imagem para reposicioná-lo.
+	Offset X	Deslocamento X
+	Offset Y	Deslocamento Y

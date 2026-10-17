@@ -40,6 +40,7 @@ pub mod histogram;
 mod image;
 pub mod inpaint;
 pub mod lens;
+pub mod liquid_glass;
 pub mod liquify;
 pub mod magnetic;
 pub mod matting;
@@ -86,6 +87,7 @@ pub mod wideangle;
 
 pub use artistic::{GALLERY_CATEGORIES, GalleryEffect, GalleryFilter, GalleryParam, GalleryParamKind};
 pub use image::{Edge, Image};
+pub use liquid_glass::{LiquidGlassShape, liquid_glass};
 pub use params_ext::*;
 
 mod params_ext;
@@ -193,6 +195,11 @@ pub enum PolarMode {
     #[default]
     RectangularToPolar,
     PolarToRectangular,
+}
+
+#[inline]
+fn default_white_tint() -> [f32; 4] {
+    [1.0, 1.0, 1.0, 1.0]
 }
 
 /// A filter and its parameters, in Photoshop's dialog units (pixels,
@@ -545,6 +552,25 @@ pub enum FilterParams {
     FilterGallery {
         effects: Vec<GalleryEffect>,
     },
+    /// Apple WWDC25 / iOS 26 Liquid Glass optical material.
+    LiquidGlass {
+        #[serde(default)]
+        shape: LiquidGlassShape,
+        #[serde(default)]
+        corner_radius: f32,
+        thickness: f32,
+        refraction: f32,
+        dispersion: f32,
+        rim_light: f32,
+        specular: f32,
+        light_angle: f32,
+        blur: f32,
+        tint_opacity: f32,
+        #[serde(default = "default_white_tint")]
+        tint_color: [f32; 4],
+        #[serde(skip)]
+        backdrop: Option<std::sync::Arc<Image>>,
+    },
 }
 
 impl FilterParams {
@@ -573,7 +599,8 @@ impl FilterParams {
             | FilterParams::Spherize { .. }
             | FilterParams::Wave { .. }
             | FilterParams::Ripple { .. }
-            | FilterParams::PolarCoordinates { .. } => Halo::Bounds,
+            | FilterParams::PolarCoordinates { .. }
+            | FilterParams::LiquidGlass { .. } => Halo::Bounds,
             other => halo_ext(other),
         }
     }
@@ -591,7 +618,7 @@ impl FilterParams {
     /// that can hold transparency, so callers turn the Background into a normal layer first and
     /// refuse a layer whose transparency is locked instead of putting the old alpha back.
     pub fn makes_transparency(&self) -> bool {
-        matches!(self, FilterParams::ColorToAlpha { .. })
+        matches!(self, FilterParams::ColorToAlpha { .. } | FilterParams::LiquidGlass { backdrop: Some(_), .. })
     }
 
     /// Whether the filter moves pixels around the reference bounds (its
@@ -662,6 +689,7 @@ impl FilterParams {
             FilterParams::ColorToAlpha { .. } => "Color to Alpha",
             FilterParams::DeInterlace { .. } => "De-Interlace",
             FilterParams::NtscColors => "NTSC Colors",
+            FilterParams::LiquidGlass { .. } => "Liquid Glass",
             FilterParams::FilterGallery { effects } => match effects.as_slice() {
                 [one] => one.filter.name(),
                 _ => "Filter Gallery",
@@ -898,6 +926,36 @@ pub fn kernel(params: &FilterParams, src: &Image, out: Rect, ctx: &Ctx) -> Vec<f
         FilterParams::DeInterlace { eliminate_even, interpolate } => video::deinterlace(src, out, ctx, *eliminate_even, *interpolate),
         FilterParams::NtscColors => video::ntsc(src, out, ctx),
         FilterParams::FilterGallery { effects } => artistic_fx::run(effects, src, out, ctx),
+        FilterParams::LiquidGlass {
+            shape,
+            corner_radius,
+            thickness,
+            refraction,
+            dispersion,
+            rim_light,
+            specular,
+            light_angle,
+            blur,
+            tint_opacity,
+            tint_color,
+            backdrop,
+        } => liquid_glass::liquid_glass(
+            src,
+            out,
+            ctx,
+            *shape,
+            *corner_radius,
+            *thickness,
+            *refraction,
+            *dispersion,
+            *rim_light,
+            *specular,
+            *light_angle,
+            *blur,
+            *tint_opacity,
+            *tint_color,
+            backdrop.as_deref(),
+        ),
     }
 }
 
@@ -1060,6 +1118,12 @@ fn apply_tiled_with_impl(
         }
     }
     let shared = (halo == Halo::Bounds).then(|| Image::read(surface, bounds.union(&area)));
+    let glass = match (params, shared.as_ref()) {
+        (FilterParams::LiquidGlass { shape, blur, backdrop, .. }, Some(src)) => {
+            Some(liquid_glass::Prepared::new(src, &ctx, *shape, *blur, backdrop.as_deref()))
+        }
+        _ => None,
+    };
     // Shape rasterization depends only on params, not on a tile's pixels.
     let shape = match params {
         FilterParams::ShapeBlur { radius, shape } => {
@@ -1118,6 +1182,38 @@ fn apply_tiled_with_impl(
             },
             (None, None) => match *params {
                 FilterParams::UnsharpMask { amount, radius, threshold } => sharpen::exact::run(src, *t, &ctx, amount, radius, threshold, ctl),
+                FilterParams::LiquidGlass {
+                    shape,
+                    corner_radius,
+                    thickness,
+                    refraction,
+                    dispersion,
+                    rim_light,
+                    specular,
+                    light_angle,
+                    tint_opacity,
+                    tint_color,
+                    ref backdrop,
+                    ..
+                } if glass.is_some() => glass.as_ref().map(|prepared| {
+                    liquid_glass::render(
+                        src,
+                        *t,
+                        &ctx,
+                        shape,
+                        corner_radius,
+                        thickness,
+                        refraction,
+                        dispersion,
+                        rim_light,
+                        specular,
+                        light_angle,
+                        tint_opacity,
+                        tint_color,
+                        backdrop.as_deref(),
+                        prepared,
+                    )
+                }),
                 _ => Some(kernel(params, src, *t, &ctx)),
             },
         }) else {

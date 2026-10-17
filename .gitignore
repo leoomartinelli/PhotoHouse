@@ -11,3 +11,12 @@ target/
 /craft-fonts
 *.log
 __pycache__/
+
+# Credenciais e arquivos locais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12

@@ -428,6 +428,31 @@ fn render_in(doc: &Document, sm: &SmartObject, ctx: &JobCtx) -> Result<Option<Su
     if filters.is_empty() {
         return Ok(Some(placed()?.surface));
     }
+    // The scene below the object is not part of a source-only stage key.
+    if filters.iter().any(|f| f.command == "filter.distort.liquidGlass") {
+        let target = doc.walk().into_iter().find_map(|(_, _, l)| match &l.content {
+            LayerContent::Smart(other) if other.contents_id == sm.contents_id && other.transform == sm.transform => Some(l.id),
+            _ => None,
+        });
+        let base = placed()?.surface;
+        let mut cur = base.clone();
+        for f in &filters {
+            ctx.check()?;
+            if f.command == "filter.distort.liquidGlass"
+                && let Some(id) = target
+            {
+                if let Some(out) = crate::filters_ext::apply_glass(doc, id, &f.params, &cur, None) {
+                    cur = if f.blend == BlendMode::Normal && f.opacity >= 1.0 { out } else { blend_surfaces(&cur, &out, f.blend, f.opacity.clamp(0.0, 1.0)) };
+                }
+            } else {
+                cur = apply_smart_filter(f, &cur, canvas, canvas.union(&cur.content_bounds()));
+            }
+        }
+        return Ok(Some(match sm.filter_mask.as_ref().filter(|m| m.enabled) {
+            Some(m) => mask_mix(&base, &cur, m),
+            None => cur,
+        }));
+    }
     let keys: Vec<StageKey> = filters
         .iter()
         .scan(placed_key, |key, f| {
@@ -544,6 +569,14 @@ fn mask_from_selection(sel: &Surface) -> LayerMask {
 pub(crate) fn add_smart_filter(doc: &mut Document, id: LayerId, sf: photocraft_doc::SmartFilter, selection: Option<&Surface>) -> Result<()> {
     let canvas = doc.bounds();
     let renderable = source_bytes(&doc.metadata, &smart(doc, id)?.source).is_some();
+    if !renderable && sf.command == "filter.distort.liquidGlass" {
+        let cache = smart(doc, id)?.cache.as_ref().ok_or_else(|| other("smart object has no pixels"))?;
+        let out = crate::filters_ext::apply_glass(doc, id, &sf.params, cache, selection).ok_or_else(|| other("cannot render glass"))?;
+        let sm = smart_mut(doc, id)?;
+        sm.cache = Some(out);
+        sm.smart_filters.push(sf);
+        return Ok(());
+    }
     let sm = smart_mut(doc, id)?;
     if renderable {
         if let Some(sel) = selection
@@ -782,6 +815,10 @@ fn convert(s: &mut Session, p: &Value) -> Result<Value> {
     })?;
     crate::layer_multi_cmds::reselect(s, vec![new_id], Some(new_id));
     Ok(json!({"layer": new_id.0}))
+}
+
+fn convert_and_liquid_glass(s: &mut Session, p: &Value) -> Result<Value> {
+    s.execute("filter.distort.liquidGlass", p.clone())
 }
 
 // ---------- contents ----------
@@ -1041,6 +1078,9 @@ fn set_filter_params(s: &mut Session, p: &Value) -> Result<Value> {
             (Value::Object(old), Value::Object(n)) => old.extend(n),
             (slot, n) => *slot = n,
         }
+        if f.command == "filter.distort.liquidGlass" {
+            crate::filters::validate_params(&f.command, &f.params)?;
+        }
         Ok(())
     })
 }
@@ -1216,6 +1256,14 @@ pub fn specs() -> Vec<CommandSpec> {
             r##"{"layer":id?} (default: combine selected layers)"##,
             not_smart,
             convert
+        ),
+        spec!(
+            "layer.smartObjects.liquidGlass",
+            "Liquid Glass…",
+            SO,
+            r##"{"layer":id?} — apply Liquid Glass using the active layer as its silhouette"##,
+            |s| s.active().map(|_| ()).ok_or_else(|| "no document open".into()),
+            convert_and_liquid_glass
         ),
         spec!("layer.smartObjects.newSmartObjectViaCopy", "New Smart Object via Copy", SO, r##"{"layer":id?}"##, has_smart, via_copy),
         spec!("layer.smartObjects.rasterize", "Rasterize", SO, r##"{"layer":id?}"##, has_smart, |s, p| s.execute("layer.rasterize.smartObject", p.clone())),

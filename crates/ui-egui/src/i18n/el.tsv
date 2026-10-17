@@ -3835,3 +3835,16 @@ curves	Smooth	Εξομάλυνση
 @plural	{n} action|{n} actions	{n} ενέργεια|{n} ενέργειες
 	Auto Add/Delete	Αυτόματη προσθήκη/διαγραφή
 	ICO is limited to 256 × 256 pixels	Το ICO περιορίζεται σε 256 × 256 εικονοστοιχεία
+
+# Liquid Glass
+	Light Angle	Γωνία φωτός
+	Rounded Rect	Στρογγυλεμένο ορθογώνιο
+	Liquid Glass…	Υγρό γυαλί…
+	Capsule	Κάψουλα
+	Specular	Ανταύγεια
+	Rim Light	Φως περιγράμματος
+	Refraction	Διάθλαση
+	Liquid Glass	Υγρό γυαλί
+	Dispersion	Διασπορά
+	Tint Opacity	Αδιαφάνεια απόχρωσης
+	Drag the glass on the canvas to reposition it.	Σύρετε το γυαλί στον καμβά για να αλλάξετε τη θέση του.

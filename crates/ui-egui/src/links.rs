@@ -8,9 +8,9 @@ use crate::PhotocraftApp;
 
 pub const DISCORD: &str = "https://discord.gg/artcraft";
 pub const ARTCRAFT_WEBSITE: &str = "https://getartcraft.com";
-pub const APP_PAGE: &str = "https://getartcraft.com/apps/photocraft";
-pub const GITHUB: &str = "https://github.com/storytold/photocraft";
-pub const ISSUES: &str = "https://github.com/storytold/photocraft/issues";
+pub const APP_PAGE: &str = "https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse";
+pub const GITHUB: &str = "https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse";
+pub const ISSUES: &str = "https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse/issues";
 
 /// Help-menu link commands: (id, url). Labels live in `menus::UI_COMMANDS`.
 pub const COMMANDS: &[(&str, &str)] =
@@ -114,8 +114,8 @@ mod tests {
         let ctx = egui::Context::default();
         for (id, url) in [
             ("help.discord", "https://discord.gg/artcraft"),
-            ("help.website", "https://getartcraft.com/apps/photocraft"),
-            ("help.github", "https://github.com/storytold/photocraft"),
+            ("help.website", "https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse"),
+            ("help.github", "https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse"),
         ] {
             let r = crate::menus::invoke(&mut app, &ctx, id, serde_json::json!({})).unwrap();
             assert_eq!(r["url"], url);

@@ -3135,3 +3135,17 @@ curves	Smooth	Glätten
 @plural	{n} action|{n} actions	{n} Aktion|{n} Aktionen
 	Auto Add/Delete	Autom. hinzuf./löschen
 	ICO is limited to 256 × 256 pixels	ICO ist auf 256 × 256 Pixel begrenzt
+
+# Liquid Glass
+	Light Angle	Lichtwinkel
+	Rounded Rect	Abgerundetes Rechteck
+	Liquid Glass…	Flüssigglas…
+	Capsule	Kapsel
+	Specular	Glanzlicht
+	Rim Light	Kantenlicht
+	Refraction	Brechung
+	Liquid Glass	Flüssigglas
+	Dispersion	Dispersion
+	Tint Opacity	Tönungsdeckkraft
+	Tint Color	Tönungsfarbe
+	Drag the glass on the canvas to reposition it.	Ziehe das Glas auf der Leinwand, um es neu zu positionieren.

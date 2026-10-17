@@ -2747,3 +2747,17 @@ curves	Smooth	平滑
 @plural	{n} action|{n} actions	{n} 个动作
 	Auto Add/Delete	自动添加/删除
 	ICO is limited to 256 × 256 pixels	ICO 最大为 256 × 256 像素
+
+# Liquid Glass
+	Light Angle	光照角度
+	Rounded Rect	圆角矩形
+	Liquid Glass…	流体玻璃…
+	Capsule	胶囊形
+	Specular	高光
+	Rim Light	边缘光
+	Refraction	折射
+	Liquid Glass	流体玻璃
+	Dispersion	色散
+	Tint Opacity	着色不透明度
+	Tint Color	着色颜色
+	Drag the glass on the canvas to reposition it.	在画布上拖动玻璃以调整位置。

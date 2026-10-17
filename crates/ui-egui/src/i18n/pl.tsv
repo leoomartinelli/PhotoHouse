@@ -3735,3 +3735,16 @@ curves	Smooth	Wygładź
 @plural	{n} action|{n} actions	{n} operacja|{n} operacje|{n} operacji
 	Auto Add/Delete	Automatyczne dodawanie/usuwanie
 	ICO is limited to 256 × 256 pixels	ICO jest ograniczony do 256 × 256 pikseli
+
+# Liquid Glass
+	Light Angle	Kąt światła
+	Rounded Rect	Zaokrąglony prostokąt
+	Liquid Glass…	Płynne szkło…
+	Capsule	Kapsuła
+	Specular	Blask
+	Rim Light	Światło krawędziowe
+	Refraction	Załamanie
+	Liquid Glass	Płynne szkło
+	Dispersion	Dyspersja
+	Tint Opacity	Krycie zabarwienia
+	Drag the glass on the canvas to reposition it.	Przeciągnij szkło na płótnie, aby zmienić jego położenie.

@@ -4058,3 +4058,16 @@ cameraRaw	Yellow	Sárga
 	Ink Characteristics	Festék jellemzői
 	Solidity:	Fedőképesség:
 	Redrawing	Újrarajzolás
+
+# Liquid Glass
+	Light Angle	Fényszög
+	Rounded Rect	Lekerekített téglalap
+	Liquid Glass…	Folyékony üveg…
+	Capsule	Kapszula
+	Specular	Becsillanás
+	Rim Light	Peremfény
+	Refraction	Fénytörés
+	Liquid Glass	Folyékony üveg
+	Dispersion	Szóródás
+	Tint Opacity	Színezés átlátszatlansága
+	Drag the glass on the canvas to reposition it.	Húzza az üveget a vásznon az áthelyezéshez.

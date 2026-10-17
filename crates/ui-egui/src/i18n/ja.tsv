@@ -3815,3 +3815,16 @@ curves	Smooth	スムーズ
 	Reset All Locked Settings	ロックされた設定をすべて初期化
 	Copy Texture to Other Tools	テクスチャを他のツールにコピー
 	ICO is limited to 256 × 256 pixels	ICO は 256 × 256 ピクセルまでです
+
+# Liquid Glass
+	Light Angle	光の角度
+	Rounded Rect	角丸長方形
+	Liquid Glass…	リキッドグラス…
+	Capsule	カプセル
+	Specular	スペキュラ
+	Rim Light	リムライト
+	Refraction	屈折
+	Liquid Glass	リキッドグラス
+	Dispersion	分散
+	Tint Opacity	色合いの不透明度
+	Drag the glass on the canvas to reposition it.	キャンバス上のガラスをドラッグして位置を変更します。

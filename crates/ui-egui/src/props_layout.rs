@@ -122,7 +122,9 @@ pub fn field_width(avail: f32, cols: usize, label_w: f32) -> f32 {
 /// subject selection, type layers its conversions, shapes and smart objects their own.
 pub fn quick_actions(content: &LayerContent) -> &'static [(&'static str, &'static str)] {
     match content {
-        LayerContent::Raster(_) => &[("Remove Background", "layer.removeBackground"), ("Select Subject", "select.subject")],
+        LayerContent::Raster(_) => {
+            &[("Liquid Glass…", "filter.distort.liquidGlass"), ("Remove Background", "layer.removeBackground"), ("Select Subject", "select.subject")]
+        }
         LayerContent::Text(_) => &[
             ("Convert to Shape", "type.convertToShape"),
             ("Convert to Paragraph Text", "type.convertToParagraphText"),
@@ -130,8 +132,13 @@ pub fn quick_actions(content: &LayerContent) -> &'static [(&'static str, &'stati
             ("Create Warped Text", "type.warpText"),
             ("Rasterize Type", "type.rasterizeTypeLayer"),
         ],
-        LayerContent::Shape(_) => &[("Rasterize Shape", "layer.rasterize.shape"), ("Convert to Smart Object", "layer.smartObjects.convertToSmartObject")],
+        LayerContent::Shape(_) => &[
+            ("Liquid Glass…", "filter.distort.liquidGlass"),
+            ("Rasterize Shape", "layer.rasterize.shape"),
+            ("Convert to Smart Object", "layer.smartObjects.convertToSmartObject"),
+        ],
         LayerContent::Smart(_) => &[
+            ("Liquid Glass…", "filter.distort.liquidGlass"),
             ("Edit Contents", "layer.smartObjects.editContents"),
             ("Convert to Layers", "layer.smartObjects.convertToLayers"),
             ("Rasterize Smart Object", "layer.rasterize.smartObject"),

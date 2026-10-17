@@ -621,6 +621,13 @@ pub(crate) fn invoke_unguarded(app: &mut PhotocraftApp, ctx: &egui::Context, id:
             Ok(json!({"dialog": crate::sizing::open(app, sz).ok_or("no document")?}))
         }
         "view.newGuide" if params.as_object().is_none_or(|o| o.is_empty()) => Ok(json!({"dialog": crate::new_guide_ui::open(app)})),
+        "layer.smartObjects.liquidGlass" => {
+            if params.as_object().is_none_or(|o| o.is_empty()) {
+                Ok(json!({"dialog": crate::filter_dialog::open(app, "filter.distort.liquidGlass")}))
+            } else {
+                app.run("filter.distort.liquidGlass", params)
+            }
+        }
         fl if crate::filter_dialog::has_dialog(fl) && params.as_object().is_none_or(|o| o.is_empty()) => {
             Ok(json!({"dialog": crate::filter_dialog::open(app, fl)}))
         }

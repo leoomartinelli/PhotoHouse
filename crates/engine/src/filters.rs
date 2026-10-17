@@ -47,6 +47,21 @@ fn preserve(p: &Value) -> Preserve {
     if s(p, "preserve", "squareness") == "roundness" { Preserve::Roundness } else { Preserve::Squareness }
 }
 
+/// Straight RGBA colour from `[r, g, b(, a)]` (0–1) or `#rrggbb`.
+fn colour(p: &Value, k: &str, d: [f32; 4]) -> [f32; 4] {
+    match p.get(k) {
+        Some(Value::Array(a)) if a.len() >= 3 => {
+            let c = |j: usize, dv: f32| a.get(j).and_then(Value::as_f64).map_or(dv, |v| v as f32);
+            [c(0, 0.0), c(1, 0.0), c(2, 0.0), c(3, 1.0)]
+        }
+        Some(Value::String(h)) if h.len() == 7 && h.starts_with('#') => {
+            let ch = |j: usize| h.get(j..j + 2).and_then(|s| u8::from_str_radix(s, 16).ok()).map_or(0.0, |v| v as f32 / 255.0);
+            [ch(1), ch(3), ch(5), 1.0]
+        }
+        _ => d,
+    }
+}
+
 /// One-step presets (no dialog): the history step they record (their own name, not the generic
 /// algorithm's) and the fixed parameters, tuned to match the reference app's fixed-strength filters.
 fn preset(id: &str) -> Option<(&'static str, FilterParams)> {
@@ -167,6 +182,28 @@ pub fn params_for(id: &str, p: &Value) -> Option<FilterParams> {
         "filter.distort.polarCoordinates" => FilterParams::PolarCoordinates {
             mode: if s(p, "mode", "rectangularToPolar") == "polarToRectangular" { PolarMode::PolarToRectangular } else { PolarMode::RectangularToPolar },
         },
+        "filter.distort.liquidGlass" => {
+            let shape = match s(p, "shape", "auto") {
+                "roundedRect" => algo::LiquidGlassShape::RoundedRect,
+                "circle" => algo::LiquidGlassShape::Circle,
+                "capsule" => algo::LiquidGlassShape::Capsule,
+                _ => algo::LiquidGlassShape::Auto,
+            };
+            FilterParams::LiquidGlass {
+                shape,
+                corner_radius: f(p, "cornerRadius", 40.0).clamp(0.0, 2000.0),
+                thickness: f(p, "thickness", 24.0).clamp(1.0, 200.0),
+                refraction: f(p, "refraction", 30.0).clamp(-100.0, 100.0),
+                dispersion: f(p, "dispersion", 5.0).clamp(0.0, 100.0),
+                rim_light: f(p, "rimLight", 70.0).clamp(0.0, 200.0),
+                specular: f(p, "specular", 60.0).clamp(0.0, 200.0),
+                light_angle: f(p, "lightAngle", 135.0).clamp(-180.0, 180.0),
+                blur: f(p, "blur", 4.0).clamp(0.0, 50.0),
+                tint_opacity: f(p, "tintOpacity", 4.0).clamp(0.0, 100.0),
+                tint_color: colour(p, "tintColor", [1.0, 1.0, 1.0, 1.0]),
+                backdrop: None,
+            }
+        }
         _ => return crate::filters_ext::params_for(id, p),
     })
 }
@@ -254,11 +291,31 @@ pub(crate) fn run_filter(s: &mut Session, id: &str, p: &Value) -> Result<Value> 
             let filter = |surf: &photocraft_raster::Surface, fp: &FilterParams, area, bounds, sel: Option<&photocraft_raster::Surface>, extent| {
                 ctx.stage(0.0, 1.0, &msg, |ctl| algo::apply_in_with(surf, fp, area, bounds, sel, extent, ctl)).ok_or(EngineError::Cancelled)
             };
+            if matches!(fp, FilterParams::LiquidGlass { .. }) {
+                let locks = doc.effective_locks(layer);
+                if locks.all || locks.pixels || locks.transparency {
+                    return Err(EngineError::Other("Liquid Glass needs an unlocked layer".into()));
+                }
+                let l = doc.layer(layer).ok_or(EngineError::NoLayer(layer))?;
+                if !matches!(l.content, LayerContent::Smart(_)) {
+                    let mut smart = crate::smart_cmds::layer_to_smart(doc, l)?;
+                    // Preserve selection, references and layer identity in this one history entry.
+                    smart.id = layer;
+                    *doc.layer_mut(layer).ok_or(EngineError::NoLayer(layer))? = smart;
+                }
+            }
+
             let selection = doc.selection.clone();
             let sel_bounds = selection.as_ref().map(photocraft_raster::Surface::content_bounds);
             // Distortions centre on the selection when there is one, else the canvas.
             let doc_bounds = doc.bounds();
-            let bounds = sel_bounds.filter(|b| !b.is_empty()).unwrap_or(doc_bounds);
+            let bounds = sel_bounds.filter(|b| !b.is_empty()).unwrap_or_else(|| {
+                if matches!(fp, FilterParams::LiquidGlass { .. }) {
+                    doc.layer(layer).and_then(|l| l.surface()).map(|s| s.content_bounds()).filter(|r| !r.is_empty()).unwrap_or(doc_bounds)
+                } else {
+                    doc_bounds
+                }
+            });
             // Neighbourhood filters repeat edge pixels at the canvas edge (or past it, where the
             // layer has off-canvas pixels) instead of fading in transparency, as Photoshop does.
             if let Some(surf) = crate::channel_cmds::channel_surface_for_filter(doc, Some(layer), &p)? {
@@ -336,7 +393,11 @@ macro_rules! filter_cmd {
             menu: &[$($m),*],
             shortcut: None,
             params: $params,
-            enabled: has_filterable_layer,
+            enabled: |s| {
+                if $id == "filter.distort.liquidGlass" && s.active().and_then(|d| d.active_layer.and_then(|id| d.doc.layer(id)))
+                    .is_some_and(|l| matches!(l.content, LayerContent::Shape(_) | LayerContent::Fill(_))) { Ok(()) }
+                else { has_filterable_layer(s) }
+            },
             run: |s, p| run_filter(s, $id, p),
             journal: true,
         }
@@ -397,6 +458,12 @@ pub fn specs() -> Vec<CommandSpec> {
         ),
         filter_cmd!("filter.distort.ripple", "Ripple…", ["Filter", "Distort"], r##"{"amount":-999..999=100,"size":"small|medium|large"}"##),
         filter_cmd!("filter.distort.polarCoordinates", "Polar Coordinates…", ["Filter", "Distort"], r##"{"mode":"rectangularToPolar|polarToRectangular"}"##),
+        filter_cmd!(
+            "filter.distort.liquidGlass",
+            "Liquid Glass…",
+            ["Filter", "Distort"],
+            r##"{"offsetX":px=0,"offsetY":px=0,"shape":"auto|roundedRect|circle|capsule"="auto","cornerRadius":0..2000=40,"thickness":1..200=24,"refraction":-100..100=30,"dispersion":0..100=5,"rimLight":0..200=70,"specular":0..200=60,"lightAngle":-180..180=135,"blur":0..50=4,"tintOpacity":0..100=4,"tintColor":color=#ffffff}"##
+        ),
         filter_cmd!("filter.other.highPass", "High Pass…", ["Filter", "Other"], r##"{"radius":0.1..1000=10}"##),
         filter_cmd!("filter.other.minimum", "Minimum…", ["Filter", "Other"], r##"{"radius":0.2..500=1,"preserve":"squareness|roundness"}"##),
         filter_cmd!("filter.other.maximum", "Maximum…", ["Filter", "Other"], r##"{"radius":0.2..500=1,"preserve":"squareness|roundness"}"##),
@@ -493,7 +560,7 @@ mod tests {
         .unwrap();
     }
 
-    const ALL: [&str; 24] = [
+    const ALL: [&str; 25] = [
         "filter.blur.gaussianBlur",
         "filter.blur.boxBlur",
         "filter.blur.motionBlur",
@@ -514,6 +581,7 @@ mod tests {
         "filter.distort.wave",
         "filter.distort.ripple",
         "filter.distort.polarCoordinates",
+        "filter.distort.liquidGlass",
         "filter.other.highPass",
         "filter.other.minimum",
         "filter.other.maximum",
@@ -822,5 +890,134 @@ mod tests {
         assert_eq!(sm.smart_filters[0].command, "filter.blur.gaussianBlur");
         assert_eq!(sm.smart_filters[0].params["radius"], json!(2));
         assert!(sm.cache.as_ref().unwrap().pixel(10, 5)[3] > 0.0, "cache was blurred");
+    }
+
+    #[test]
+    fn smart_object_liquid_glass_smart_filter() {
+        use photocraft_doc::{Layer, SmartObject, SmartSource};
+        let mut s = session();
+        s.edit("smart_glass", |doc, active| {
+            let mut cache = photocraft_raster::Surface::new(doc.pixel_format());
+            cache.fill_rect(photocraft_geom::Rect::new(0, 0, 32, 32), &[0.5, 0.2, 0.8, 1.0]);
+            let l = Layer::new(
+                "glass_so",
+                LayerContent::Smart(SmartObject {
+                    contents_id: photocraft_doc::SmartContentsId::fresh(),
+                    source: SmartSource::Linked { path: String::new() },
+                    transform: photocraft_geom::Affine::IDENTITY,
+                    smart_filters: vec![],
+                    cache: Some(cache),
+                    psd_raw: None,
+                    filters_enabled: true,
+                    filter_mask: None,
+                    warp: None,
+                    stack_mode: None,
+                    perspective: None,
+                }),
+            );
+            *active = Some(doc.insert_above(*active, l));
+            Ok(())
+        })
+        .unwrap();
+        s.execute(
+            "filter.distort.liquidGlass",
+            json!({
+                "shape": "roundedRect",
+                "cornerRadius": 8.0,
+                "thickness": 16.0,
+                "refraction": 40.0,
+                "dispersion": 8.0,
+                "rimLight": 80.0,
+                "specular": 90.0,
+            }),
+        )
+        .unwrap();
+        let d = s.active().unwrap();
+        let LayerContent::Smart(sm) = &d.doc.layer(d.active_layer.unwrap()).unwrap().content else { panic!() };
+        assert_eq!(sm.smart_filters.len(), 1);
+        assert_eq!(sm.smart_filters[0].command, "filter.distort.liquidGlass");
+        assert_eq!(sm.smart_filters[0].params["shape"], json!("roundedRect"));
+        assert_eq!(sm.smart_filters[0].params["cornerRadius"], json!(8.0));
+        assert!(sm.cache.is_some());
+    }
+    #[test]
+    fn liquid_glass_uses_rectangle_bounds_and_only_lower_layers() {
+        use photocraft_doc::Layer;
+        use photocraft_geom::Rect;
+        let mut s = session();
+        let mut target = None;
+        s.edit("glass fixture", |doc, active| {
+            let mut rect = photocraft_raster::Surface::new(doc.pixel_format());
+            rect.fill_rect(Rect::new(12, 8, 36, 24), &[1.0, 0.0, 0.0, 1.0]);
+            let id = doc.insert_above(*active, Layer::new("glass", LayerContent::Raster(rect)));
+            target = Some(id);
+            let mut foreground = photocraft_raster::Surface::new(doc.pixel_format());
+            foreground.fill_rect(doc.bounds(), &[0.0, 1.0, 0.0, 1.0]);
+            doc.insert_above(Some(id), Layer::new("foreground", LayerContent::Raster(foreground)));
+            *active = Some(id);
+            Ok(())
+        })
+        .unwrap();
+        let id = target.unwrap();
+        let before = s.active().unwrap().doc.layer(id).unwrap().surface().unwrap().clone();
+        s.execute("filter.distort.liquidGlass", json!({"cornerRadius": 4, "thickness": 3, "blur": 0, "tintOpacity": 0, "rimLight": 0, "specular": 0})).unwrap();
+        let doc = &s.active().unwrap().doc;
+        let l = doc.layer(id).unwrap();
+        assert!(matches!(l.content, LayerContent::Smart(_)));
+        let px = l.surface().unwrap();
+        let center = px.pixel(24, 16);
+        assert!((center[0] - 0.2).abs() < 0.01);
+        assert!((center[1] - 0.4).abs() < 0.01);
+        assert!((center[2] - 0.8).abs() < 0.01);
+        assert_eq!(px.pixel(0, 0)[3], 0.0);
+        assert_eq!(px.pixel(12, 8)[3], 0.0);
+        s.execute("edit.undo", json!({})).unwrap();
+        assert_eq!(
+            s.active().unwrap().doc.layer(id).unwrap().surface().unwrap().read_region(Rect::new(0, 0, 48, 32)),
+            before.read_region(Rect::new(0, 0, 48, 32))
+        );
+    }
+
+    #[test]
+    fn liquid_glass_preserves_vector_rectangle_in_smart_source() {
+        let mut s = session();
+        s.execute("shape.create", json!({"kind":"rect", "rect":[12,8,24,16], "fill":"#ff0000"})).unwrap();
+        s.execute("filter.distort.liquidGlass", json!({"blur":0, "tintOpacity":0})).unwrap();
+        let d = s.active().unwrap();
+        let l = d.doc.layer(d.active_layer.unwrap()).unwrap();
+        assert!(matches!(l.content, LayerContent::Smart(_)));
+        assert!(l.surface().unwrap().pixel(24, 16)[2] > 0.6);
+        s.execute("edit.undo", json!({})).unwrap();
+        let d = s.active().unwrap();
+        assert!(matches!(d.doc.layer(d.active_layer.unwrap()).unwrap().content, LayerContent::Shape(_)));
+    }
+
+    #[test]
+    fn liquid_glass_smart_edit_moves_lens_resamples_background_and_preserves_source() {
+        use photocraft_doc::{LayerId, SmartSource};
+        let mut s = session();
+        paint_pattern(&mut s);
+        let bg = s.active().unwrap().active_layer.unwrap();
+        let id = LayerId(s.execute("shape.create", json!({"kind":"rect", "rect":[4,4,12,16], "fill":"#ff0000"})).unwrap()["layer"].as_u64().unwrap());
+        s.execute("filter.distort.liquidGlass", json!({"cornerRadius":0,"refraction":0,"rimLight":0,"specular":0,"blur":0,"tintOpacity":0})).unwrap();
+        let object = |s: &Session| match &s.active().unwrap().doc.layer(id).unwrap().content {
+            LayerContent::Smart(sm) => sm.clone(),
+            _ => panic!("expected smart object"),
+        };
+        let original = object(&s);
+        let SmartSource::Embedded { ref file_name, ref bytes } = original.source else { panic!("source must be embedded") };
+        let nested = crate::smart_cmds::decode_source(file_name, bytes).unwrap();
+        assert!(nested.layers.iter().any(|l| matches!(l.content, LayerContent::Shape(_))), "original vector remains editable");
+        s.execute("layer.smartFilter.setParams", json!({"layer":id.0,"index":0,"params":{"offsetX":20,"offsetY":2}})).unwrap();
+        let moved = object(&s);
+        assert_eq!(moved.smart_filters.len(), 1);
+        assert_eq!(moved.source, original.source);
+        let pixels = moved.cache.as_ref().unwrap();
+        assert_eq!(pixels.pixel(6, 10)[3], 0.0);
+        assert_eq!(pixels.pixel(28, 12), s.active().unwrap().doc.layer(bg).unwrap().surface().unwrap().pixel(28, 12));
+        s.execute("edit.undo", json!({})).unwrap();
+        assert_eq!(object(&s).cache.as_ref().unwrap().pixel(6, 10), original.cache.as_ref().unwrap().pixel(6, 10));
+        assert!(s.execute("layer.smartFilter.setParams", json!({"layer":id.0,"index":0,"params":{"offsetX":"bad"}})).is_err());
+        assert_eq!(object(&s).smart_filters.len(), 1);
     }
 }

@@ -47,7 +47,7 @@ pub(crate) fn window(app: &PhotocraftApp, dialog: u64, ui: &mut egui::Ui, f: &mu
     });
     // The proxy factor the preview runs at (the filtered key's when it exists, else the request's).
     let base_k = filtered.as_ref().map(|(k, _)| k.k).unwrap_or_else(|| {
-        let params = app.with_mask_target(&cmd, crate::filter_dialog::params_of(f));
+        let params = app.with_mask_target(&cmd, crate::filter_dialog::preview_params_of(f));
         crate::filter_dialog::preview_factor(&cmd, &params, crate::proxy::preview_factor(&st.doc, crate::proxy::reduced_previews(app)))
     });
 

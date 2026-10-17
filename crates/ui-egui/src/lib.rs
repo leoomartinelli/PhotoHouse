@@ -119,6 +119,7 @@ mod layer_transfer;
 pub mod layer_tree_ui;
 mod layout_keys;
 pub mod links;
+mod liquid_glass_ui;
 pub mod liquify_ui;
 pub mod magnetic_lasso_ui;
 mod mask_props_ui;

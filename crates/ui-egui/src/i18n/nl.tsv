@@ -3897,3 +3897,16 @@ curves	Smooth	Vloeiend maken
 @plural	{n} action|{n} actions	{n} handeling|{n} handelingen
 	Auto Add/Delete	Automatisch toevoegen/verwijderen
 	ICO is limited to 256 × 256 pixels	ICO is beperkt tot 256 × 256 pixels
+
+# Liquid Glass
+	Light Angle	Lichthoek
+	Rounded Rect	Afgeronde rechthoek
+	Liquid Glass…	Vloeibaar glas…
+	Capsule	Capsule
+	Specular	Hooglicht
+	Rim Light	Randlicht
+	Refraction	Breking
+	Liquid Glass	Vloeibaar glas
+	Dispersion	Dispersie
+	Tint Opacity	Tintdekking
+	Drag the glass on the canvas to reposition it.	Sleep het glas op het canvas om het te verplaatsen.

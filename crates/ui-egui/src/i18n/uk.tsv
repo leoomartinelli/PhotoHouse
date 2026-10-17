@@ -3836,3 +3836,16 @@ curves	Smooth	Згладити
 @plural	{n} action|{n} actions	{n} операція|{n} операції|{n} операцій
 	Auto Add/Delete	Автододавання/видалення
 	ICO is limited to 256 × 256 pixels	ICO обмежено розміром 256 × 256 пікселів
+
+# Liquid Glass
+	Light Angle	Кут світла
+	Rounded Rect	Скруглений прямокутник
+	Liquid Glass…	Рідке скло…
+	Capsule	Капсула
+	Specular	Відблиск
+	Rim Light	Контурне світло
+	Refraction	Заломлення
+	Liquid Glass	Рідке скло
+	Dispersion	Дисперсія
+	Tint Opacity	Непрозорість відтінку
+	Drag the glass on the canvas to reposition it.	Перетягніть скло на полотні, щоб змінити його положення.

@@ -3103,3 +3103,17 @@ curves	Smooth	Сгладить
 	Gray Value (Median)	Уровень серого (медиана)
 	Integrated Density	Интегральная плотность
 	Length	Длина
+
+# Liquid Glass
+	Light Angle	Угол освещения
+	Rounded Rect	Скругленный прямоугольник
+	Liquid Glass…	Жидкое стекло…
+	Capsule	Капсула
+	Specular	Блик
+	Rim Light	Контурный свет
+	Refraction	Преломление
+	Liquid Glass	Жидкое стекло
+	Dispersion	Дисперсия
+	Tint Opacity	Непрозрачность оттенка
+	Tint Color	Цвет оттенка
+	Drag the glass on the canvas to reposition it.	Перетащите стекло на холсте, чтобы изменить его положение.
