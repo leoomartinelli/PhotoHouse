@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="PhotoHouse" Language="1046" Version="$(var.Version)" Manufacturer="PhotoHouse" UpgradeCode="A4879938-99CD-41B6-B6F9-DAFE49070697">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perUser" InstallPrivileges="limited" Platform="x64" Description="PhotoHouse - editor de imagens" />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of PhotoHouse is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Icon Id="PhotoHouse.ico" SourceFile="$(var.IconPath)" />
+    <Property Id="ARPPRODUCTICON" Value="PhotoHouse.ico" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="ExistingInstallDirectory" Root="HKCU" Key="Software\PhotoHouse" Name="InstallDir" Type="raw" Win64="yes" />
+    </Property>
+    <CustomAction Id="SetInstallLocation" Property="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" />
+    <InstallExecuteSequence><Custom Action="SetInstallLocation" After="CostFinalize">NOT Installed</Custom></InstallExecuteSequence>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder"><Directory Id="ProgramsFolder" Name="Programs"><Directory Id="INSTALLFOLDER" Name="PhotoHouse">
+        <Component Id="App" Guid="B80BCE57-D491-4802-8BD4-89B9A9851B9C" Win64="yes">
+          <RegistryValue Root="HKCU" Key="Software\PhotoHouse" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" KeyPath="yes" />
+          <File Id="AppExe" Source="$(var.BinDir)\PhotoHouse.exe" />
+          <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
+          <RemoveFolder Id="RemoveProgramsFolderIfEmpty" Directory="ProgramsFolder" On="uninstall" />
+          <Shortcut Id="StartShortcut" Directory="ProgramMenuFolder" Name="PhotoHouse" Target="[#AppExe]" WorkingDirectory="INSTALLFOLDER" Icon="PhotoHouse.ico" />
+          <Shortcut Id="DesktopShortcut" Directory="DesktopFolder" Name="PhotoHouse" Target="[#AppExe]" WorkingDirectory="INSTALLFOLDER" Icon="PhotoHouse.ico" />
+        </Component>
+        <Component Id="Cli" Guid="D086B8F9-11A7-484E-B9E5-61458D846AAE" Win64="yes">
+          <RegistryValue Root="HKCU" Key="Software\PhotoHouse" Name="Cli" Value="1" Type="integer" KeyPath="yes" />
+          <File Source="$(var.BinDir)\photocraft-cli.exe" />
+        </Component>
+        <Component Id="Licenses" Guid="59B9EEEC-3D81-4464-8916-9E93039D8273" Win64="yes">
+          <RegistryValue Root="HKCU" Key="Software\PhotoHouse" Name="Licenses" Value="1" Type="integer" KeyPath="yes" />
+          <File Source="$(var.SourceDir)\LICENSE-MIT" />
+          <File Source="$(var.SourceDir)\LICENSE-APACHE" />
+          <File Source="$(var.SourceDir)\NOTICE" />
+          <File Source="$(var.SourceDir)\ATTRIBUTION.md" />
+          <File Source="$(var.SourceDir)\assets\fonts\OFL-Inter.txt" />
+          <File Source="$(var.SourceDir)\assets\fonts\OFL-JetBrainsMono.txt" />
+          <File Source="$(var.SourceDir)\assets\icons\LICENSE-lucide.txt" />
+          <File Source="$(var.SourceDir)\assets\dict\LICENSE-SCOWL.txt" />
+        </Component>
+      </Directory></Directory></Directory>
+      <Directory Id="ProgramMenuFolder" />
+      <Directory Id="DesktopFolder" />
+    </Directory>
+    <Feature Id="Main" Title="PhotoHouse" Level="1">
+      <ComponentRef Id="App" /><ComponentRef Id="Cli" /><ComponentRef Id="Licenses" />
+    </Feature>
+  </Product>
+</Wix>

@@ -1,0 +1,44 @@
+name: Reportar um bug
+description: Algo quebrou ou saiu diferente do que a House esperava.
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Que bom que você viu. Conta com calma o que aconteceu, pra gente cuidar junto.
+  - type: textarea
+    id: aconteceu
+    attributes:
+      label: O que aconteceu
+      description: Conta o que você viu, do jeito que aconteceu.
+      placeholder: Abri o projeto e a tela ficou em branco.
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que era esperado
+      description: Como deveria ter sido.
+      placeholder: A tela deveria abrir com a peça pronta pra editar.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Passos pra repetir
+      description: A sequência, do começo ao fim, pra outra pessoa ver o mesmo.
+      placeholder: |
+        1. Abro o projeto
+        2. Clico em exportar
+        3. A tela fecha
+    validations:
+      required: true
+  - type: textarea
+    id: print-video
+    attributes:
+      label: Print ou vídeo
+      description: Se tiver, cola um print ou o link de um vídeo. Se não tiver, pode deixar em branco.
+      placeholder: Cola a imagem aqui, ou um link do vídeo.
+    validations:
+      required: false

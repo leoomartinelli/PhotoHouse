@@ -1,0 +1,135 @@
+# Versão da House
+# Cria a tag e a release quando um pull request entra na main.
+# Não mexe no package.json. Não publica pacote e não faz deploy.
+#
+# Um workflow template só copia este yml para o repositório.
+# Se o cálculo ficasse num script separado, esse arquivo precisaria ser
+# copiado para .github/scripts/proxima-versao.mjs. O cálculo mora aqui
+# dentro, num passo de Node, e este workflow não depende de arquivo externo.
+
+name: Versão
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: versao
+  cancel-in-progress: false
+
+jobs:
+  versao:
+    name: Versão
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Baixar o código com as tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Descobrir o PR e calcular a versão
+        id: calcular
+        shell: bash
+        run: |
+          set -euo pipefail
+          PR_JSON=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '[.[] | select(.merged_at != null)][0] // empty | {number, title, labels: [.labels[].name]}')
+          export PR_JSON
+          node <<'NODE'
+          const { execSync } = require('child_process')
+          const fs = require('fs')
+
+          const saida = process.env.GITHUB_OUTPUT
+          const prBruto = (process.env.PR_JSON || '').trim()
+
+          function registrar(publicar, tag) {
+            const linhas = [`publicar=${publicar}`]
+            if (tag) linhas.push(`tag=${tag}`)
+            fs.appendFileSync(saida, `${linhas.join('\n')}\n`)
+          }
+
+          function ultimaTag() {
+            try {
+              return execSync("git describe --tags --abbrev=0 --match 'v[0-9]*'", {
+                encoding: 'utf8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+              }).trim()
+            } catch (erro) {
+              const stderr = `${erro.stderr || ''}`
+              if (/No names found|cannot describe/i.test(stderr)) return null
+              throw erro
+            }
+          }
+
+          function nivelDoTitulo(titulo) {
+            const texto = (titulo || '').trim()
+            const doisPontos = texto.indexOf(':')
+            const exclamacao = texto.indexOf('!')
+            if (exclamacao !== -1 && doisPontos !== -1 && exclamacao < doisPontos) return 'major'
+            if (/^feat(?![a-z])/i.test(texto) || /^\[feat\]/i.test(texto)) return 'minor'
+            return 'patch'
+          }
+
+          function nivelDasLabels(labels) {
+            const ordem = ['versao:major', 'versao:minor', 'versao:patch', 'versao:nenhuma']
+            const achada = ordem.find((nome) => labels.includes(nome))
+            return achada ? achada.slice('versao:'.length) : null
+          }
+
+          function subir(base, nivel) {
+            const [x, y, z] = base
+            if (nivel === 'major') return [x + 1, 0, 0]
+            if (nivel === 'minor') return [x, y + 1, 0]
+            if (nivel === 'patch') return [x, y, z + 1]
+            throw new Error(`Nível desconhecido: ${nivel}`)
+          }
+
+          if (!prBruto) {
+            console.log('Sem PR mergeado neste commit. Sem versão nova.')
+            registrar('nao', '')
+            process.exit(0)
+          }
+
+          const pr = JSON.parse(prBruto)
+          const labels = Array.isArray(pr.labels) ? pr.labels : []
+          const nivel = nivelDasLabels(labels) || nivelDoTitulo(pr.title)
+
+          if (nivel === 'nenhuma') {
+            console.log('Label versao:nenhuma. Sem versão nova.')
+            registrar('nao', '')
+            process.exit(0)
+          }
+
+          const tagAtual = ultimaTag()
+          let base = [0, 0, 0]
+          if (tagAtual) {
+            const encontrado = tagAtual.match(/^v(\d+)\.(\d+)\.(\d+)$/)
+            if (!encontrado) {
+              console.error(`A tag ${tagAtual} não está no formato vX.Y.Z.`)
+              process.exit(1)
+            }
+            base = [Number(encontrado[1]), Number(encontrado[2]), Number(encontrado[3])]
+          } else {
+            console.log('Nenhuma tag ainda. A base é 0.0.0.')
+          }
+
+          const [x, y, z] = subir(base, nivel)
+          const nova = `v${x}.${y}.${z}`
+          console.log(`Próxima versão: ${nova} (${nivel}), a partir de ${tagAtual || '0.0.0'}.`)
+          registrar('sim', nova)
+          NODE
+
+      - name: Publicar a release
+        if: steps.calcular.outputs.publicar == 'sim'
+        shell: bash
+        run: |
+          gh release create "${{ steps.calcular.outputs.tag }}" \
+            --target "$GITHUB_SHA" \
+            --title "${{ steps.calcular.outputs.tag }}" \
+            --generate-notes

@@ -1,0 +1,22 @@
+*~
+plan/
+/target
+target/
+/dist
+/corpus
+/log
+/secrets
+/temp
+/book/output
+/craft-fonts
+*.log
+__pycache__/
+
+# Credenciais e arquivos locais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
