@@ -64,15 +64,13 @@ fn frame_uv(frame: usize) -> Rect {
     Rect::from_min_max(egui::pos2(x, y), egui::pos2(x + 1.0 / 8.0, y + 1.0 / 7.0))
 }
 
-pub fn run() -> Result<bool, eframe::Error> {
-    let complete = Arc::new(AtomicBool::new(false));
-    let finished = complete.clone();
+fn native_options() -> eframe::NativeOptions {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_title("PhotoHouse — iniciando")
             .with_app_id("ai.storyteller.photocraft.startup")
             .with_icon(crate::app_icon::window_icon())
-            .with_inner_size([760.0, 520.0])
+            .with_inner_size([784.0, 544.0])
             .with_resizable(false)
             .with_decorations(false)
             .with_transparent(true),
@@ -80,10 +78,32 @@ pub fn run() -> Result<bool, eframe::Error> {
         persist_window: false,
         ..Default::default()
     };
+    #[cfg(target_os = "windows")]
+    {
+        use eframe::{egui_wgpu::WgpuSetup, wgpu};
+        let mut options = options;
+        // DXGI's default HWND swapchain is opaque even when clear_color has alpha zero.
+        // DirectComposition supports premultiplied alpha, including the neon penumbra.
+        if let WgpuSetup::CreateNew(setup) = &mut options.wgpu_options.wgpu_setup {
+            setup.instance_descriptor.backends = wgpu::Backends::DX12;
+            setup.instance_descriptor.backend_options.dx12.presentation_system = wgpu::Dx12SwapchainKind::DxgiFromVisual;
+        }
+        options
+    }
+    #[cfg(not(target_os = "windows"))]
+    options
+}
+
+pub fn run() -> Result<bool, eframe::Error> {
+    let complete = Arc::new(AtomicBool::new(false));
+    let finished = complete.clone();
+    let options = native_options();
     eframe::run_native(
         "PhotoHouse — iniciando",
         options,
         Box::new(move |cc| {
+            enable_composition(cc);
+            let window_frame = crate::window_frame::service(cc, true);
             let mut fonts = photocraft_ui_egui::egui_fonts::definitions();
             let mut regular = FontFamily::Proportional;
             let mut bold = FontFamily::Proportional;
@@ -109,11 +129,31 @@ pub fn run() -> Result<bool, eframe::Error> {
             }
             let color = egui::ColorImage::from_rgba_unmultiplied([5760, 5824], &image.to_rgba8());
             let texture = cc.egui_ctx.load_texture("photohouse-startup-housinho", color, egui::TextureOptions::LINEAR);
-            Ok(Box::new(Splash { texture, regular, bold, start: None, finished, capture_requested: [false; 3] }))
+            Ok(Box::new(Splash { texture, regular, bold, start: None, finished, capture_requested: [false; 3], window_frame }))
         }),
     )?;
     Ok(complete.load(Ordering::Relaxed))
 }
+
+#[cfg(target_os = "windows")]
+fn enable_composition(cc: &eframe::CreationContext<'_>) {
+    use eframe::wgpu::rwh::{HasWindowHandle, RawWindowHandle};
+    use winsafe::co;
+    let Ok(handle) = cc.window_handle() else { return };
+    let RawWindowHandle::Win32(handle) = handle.as_raw() else { return };
+    // Obtain a safe HWND through enumeration, as the editor's window_frame service does.
+    let _ = winsafe::EnumWindows(|hwnd| {
+        if hwnd.ptr() as isize == handle.hwnd.get() {
+            hwnd.set_style_ex(hwnd.style_ex() | co::WS_EX::NOREDIRECTIONBITMAP);
+            false
+        } else {
+            true
+        }
+    });
+}
+
+#[cfg(not(target_os = "windows"))]
+fn enable_composition(_: &eframe::CreationContext<'_>) {}
 
 struct Splash {
     texture: egui::TextureHandle,
@@ -122,6 +162,7 @@ struct Splash {
     start: Option<Instant>,
     finished: Arc<AtomicBool>,
     capture_requested: [bool; 3],
+    window_frame: Option<photocraft_ui_egui::WindowFrameFn>,
 }
 
 impl eframe::App for Splash {
@@ -130,6 +171,9 @@ impl eframe::App for Splash {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _: &mut eframe::Frame) {
+        if let Some(service) = &mut self.window_frame {
+            service();
+        }
         let ctx = ui.ctx().clone();
         self.collect_captures(&ctx);
         if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
@@ -138,7 +182,7 @@ impl eframe::App for Splash {
         }
         let elapsed = self.start.get_or_insert_with(Instant::now).elapsed();
         let state = progress(elapsed);
-        let rect = ui.max_rect().shrink(20.0);
+        let rect = ui.max_rect().shrink(32.0);
         self.paint(ui, rect, &state);
         if ui.interact(rect, egui::Id::new("splash-drag"), egui::Sense::drag()).drag_started() {
             ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
@@ -158,14 +202,9 @@ impl Splash {
         let painter = ui.painter();
         let scale = rect.width() / 720.0;
         let split = rect.left() + rect.width() * 0.4237;
-        for glow in (1..=16).rev() {
-            let alpha = ((17 - glow) * 2) as u8;
-            painter.rect_stroke(
-                rect.expand(glow as f32),
-                24.0 + glow as f32,
-                Stroke::new(1.0, Color32::from_rgba_unmultiplied(191, 254, 0, alpha)),
-                StrokeKind::Inside,
-            );
+        for (blur, spread, alpha) in [(56, 2, 90), (24, 1, 145), (8, 0, 190)] {
+            let light = egui::epaint::Shadow { offset: [0, 0], blur, spread, color: Color32::from_rgba_unmultiplied(191, 254, 0, alpha) };
+            painter.add(light.as_shape(rect, 24.0));
         }
         painter.rect_filled(rect, 24.0, SURFACE);
         let art = Rect::from_min_max(egui::pos2(split, rect.top()), rect.max);
@@ -256,6 +295,17 @@ impl Splash {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_startup_uses_a_transparent_composition_surface() {
+        let options = native_options();
+        assert_eq!(options.viewport.transparent, Some(true));
+        assert_eq!(options.viewport.decorations, Some(false));
+        let eframe::egui_wgpu::WgpuSetup::CreateNew(setup) = options.wgpu_options.wgpu_setup else { panic!("expected a dedicated startup surface") };
+        assert_eq!(setup.instance_descriptor.backends, eframe::wgpu::Backends::DX12);
+        assert_eq!(setup.instance_descriptor.backend_options.dx12.presentation_system, eframe::wgpu::Dx12SwapchainKind::DxgiFromVisual);
+    }
 
     #[test]
     fn animation_and_counter_share_endpoints_and_hold_final_frame() {

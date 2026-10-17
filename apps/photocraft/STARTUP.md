@@ -13,6 +13,14 @@ O relógio de 4,16 segundos controla percentual e quadro; ao atingir 100%, o
 quadro final permanece parado por 200 ms, a abertura fecha e o editor inicia.
 Este percentual descreve a animação de abertura, não a medição das tarefas do editor.
 
+No Windows, a abertura usa DX12 com `DxgiFromVisual` (DirectComposition),
+alpha pré-multiplicado e `WS_EX_NOREDIRECTIONBITMAP`. O swapchain padrão
+`DxgiFromHwnd` não suporta transparência e deixa uma moldura branca apesar do
+fundo transparente no framebuffer. O serviço nativo remove também a moldura do
+sistema. Três sombras desfocadas desenham a luz neon em uma margem transparente
+de 32 pontos, mantendo a área principal em 720 × 480 pontos.
+Referência: [wgpu: Dx12SwapchainKind](https://docs.rs/wgpu/30.0.0/wgpu/enum.Dx12SwapchainKind.html).
+
 Esc ou fechar a abertura cancela o lançamento inteiro. Falha ao criar a janela
 de abertura é registrada e permite abrir o editor para recuperação.
 
