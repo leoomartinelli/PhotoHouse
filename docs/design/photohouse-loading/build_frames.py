@@ -1,15 +1,29 @@
-"""Extrai os quadros do GIF autorizado para reprodução controlada no estudo."""
+"""Gera GIF otimizado e quadros de exibição diretamente do vídeo autorizado."""
+import argparse
 from pathlib import Path
-from PIL import Image, ImageSequence
+import shutil
+import subprocess
+from PIL import Image
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("video", type=Path, help="Caminho do MP4 original fornecido pelo usuário")
+args = parser.parse_args()
+ffmpeg = shutil.which("ffmpeg")
+if not ffmpeg:
+    import imageio_ffmpeg
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
 assets = Path(__file__).resolve().parent / "assets"
-with Image.open(assets / "housinho.gif") as source:
-    if source.size != (490, 566) or source.n_frames != 52:
-        raise ValueError("Este estudo espera o GIF de 490 × 566 com 52 quadros.")
-    sprite = Image.new("RGB", (490 * 8, 566 * 7), (231, 231, 231))
-    for index, frame in enumerate(ImageSequence.Iterator(source)):
-        if frame.info.get("duration") != 80:
-            raise ValueError("Este estudo espera quadros de 80 ms.")
-        sprite.paste(frame.convert("RGB"), ((index % 8) * 490, (index // 8) * 566))
-sprite.save(assets / "housinho-frames.webp", quality=80, method=4)
-print("52 quadros exportados em grade 8 × 7; o GIF original foi preservado.")
+filters = "fps=12.5,scale=720:832:flags=lanczos"
+base = [ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(args.video), "-t", "4.16"]
+palette = filters + ",split[a][b];[a]palettegen=stats_mode=full[p];[b][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle"
+subprocess.run(base + ["-filter_complex", palette, "-frames:v", "52", "-an", "-loop", "-1", "-y", str(assets / "housinho.gif")], check=True)
+raw = subprocess.run(base + ["-vf", filters, "-frames:v", "52", "-an", "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1"], capture_output=True, check=True).stdout
+size = 720 * 832 * 3
+if len(raw) != size * 52:
+    raise ValueError("O vídeo deve fornecer 52 quadros para o trecho de 4,16 segundos.")
+sprite = Image.new("RGB", (720 * 8, 832 * 7), (231, 231, 231))
+for index in range(52):
+    frame = Image.frombytes("RGB", (720, 832), raw[index * size:(index + 1) * size])
+    sprite.paste(frame, ((index % 8) * 720, (index // 8) * 832))
+sprite.save(assets / "housinho-frames.webp", quality=88, method=4)
+print("GIF 720 × 832 e sprite gerados diretamente do MP4; 52 quadros / 4,16 s.")

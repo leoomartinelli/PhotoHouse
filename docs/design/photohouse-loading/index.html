@@ -26,7 +26,7 @@ body{margin:0;background:#191b16;color:#eef0e8;font-family:Roboto,Arial,sans-ser
             <div class="ph-track" role="progressbar" aria-label="Carregamento demonstrativo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ph-fill"></div></div>
         <footer class="ph-footer"><span><strong>The House</strong> Studio</span><span class="ph-version">Versão 0.8.2</span></footer>
           </section>
-          <div class="ph-mascot"><canvas class="ph-art" width="490" height="566" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
+          <div class="ph-mascot"><canvas class="ph-art" width="720" height="832" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
         </div>
       </div>
     </section>
@@ -39,7 +39,7 @@ body{margin:0;background:#191b16;color:#eef0e8;font-family:Roboto,Arial,sans-ser
             <div class="ph-track" role="progressbar" aria-label="Carregamento demonstrativo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ph-fill"></div></div>
         <footer class="ph-footer"><span><strong>The House</strong> Studio</span><span class="ph-version">Versão 0.8.2</span></footer>
           </section>
-          <div class="ph-mascot"><canvas class="ph-art" width="490" height="566" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
+          <div class="ph-mascot"><canvas class="ph-art" width="720" height="832" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
         </div>
       </div>
     </section>
@@ -101,7 +101,7 @@ body{margin:0;background:#191b16;color:#eef0e8;font-family:Roboto,Arial,sans-ser
    views.forEach(view=>{view.value.textContent=String(percentage).padStart(3,'0');view.fill.style.width=percentage+'%';view.progress.setAttribute('aria-valuenow',String(percentage));});
    if(!ready||frame===lastFrame)return;
    const w=sheet.naturalWidth/columns,h=sheet.naturalHeight/rows;
-   views.forEach(view=>{if(view.context){view.context.clearRect(0,0,490,566);view.context.drawImage(sheet,(frame%columns)*w,Math.floor(frame/columns)*h,w,h,0,0,490,566);view.canvas.dataset.frame=String(frame);}});
+   views.forEach(view=>{if(view.context){view.context.clearRect(0,0,view.canvas.width,view.canvas.height);view.context.drawImage(sheet,(frame%columns)*w,Math.floor(frame/columns)*h,w,h,0,0,view.canvas.width,view.canvas.height);view.canvas.dataset.frame=String(frame);}});
    lastFrame=frame;
  }
  function tick(now){

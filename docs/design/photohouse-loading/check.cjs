@@ -12,7 +12,7 @@ function setup(reduced) {
   const pending = new Map();
   let requestId = 0;
   const makeNode = () => ({
-    textContent: '', clientWidth: 280, disabled: true, dataset: {}, attrs: {},
+    textContent: '', width: 720, height: 832, clientWidth: 280, disabled: true, dataset: {}, attrs: {},
     style: {setProperty(k, v) {this[k] = v;}},
     getBoundingClientRect: () => ({width: 30}),
     setAttribute(k, v) {this.attrs[k] = v;},
@@ -31,7 +31,7 @@ function setup(reduced) {
   let image;
   const context = {
     document: {getElementById: () => root, createElement: () => ({getContext: () => ({measureText: () => ({width: 168})})})},
-    Image: class {constructor() {image = this; this.naturalWidth = 3920; this.naturalHeight = 3962;}},
+    Image: class {constructor() {image = this; this.naturalWidth = 5760; this.naturalHeight = 5824;}},
     ResizeObserver: class {observe() {}},
     matchMedia: () => ({matches: reduced, addEventListener() {}}),
     performance: {now: () => 0},
