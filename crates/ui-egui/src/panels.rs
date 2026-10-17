@@ -680,9 +680,9 @@ pub fn title_bar(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
                         }
                         button.context_menu(|ui| crate::prefs_ui::appearance_context_menu(app, ui));
                     }
-                    // The community Discord, one click away while the bar has room for it
-                    // (narrow windows drop it first; it is also Help › Discord).
-                    if ui.available_width() >= DISCORD_ROOM {
+                    // Keep the home screen free of community links. In the editor, show
+                    // Discord when the bar has room (it is also available under Help).
+                    if app.session.active().is_some() && ui.available_width() >= DISCORD_ROOM {
                         let discord = egui::Button::image_and_text(
                             icons::image("message-square", 14.0, t.text_dim),
                             egui::RichText::new(tl!("Discord")).color(t.text_dim).size(12.0),

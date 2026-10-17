@@ -8,7 +8,8 @@
 
 use std::f32::consts::TAU;
 
-use egui::{Color32, Context, Id, Mesh, Pos2, Rect, Rot2, Sense, Shape, TextureHandle, TextureOptions, Ui, Vec2, pos2, vec2};
+use egui::emath::Rot2;
+use egui::{Color32, Context, Id, Mesh, Pos2, Rect, Sense, Shape, TextureHandle, TextureOptions, Ui, Vec2, pos2, vec2};
 
 /// The layers and where each sits in the SVG's units (their `viewBox`es; a test keeps them in sync).
 const LAYERS: [(&str, &[u8], Rect); 3] = [
@@ -244,11 +245,12 @@ mod tests {
         let ctx = Context::default();
         let id = Id::new("mascote-test");
         let rect = Rect::from_min_size(Pos2::ZERO, vec2(200.0, 200.0 * ASPECT));
-        let mut frame = |pointer: Option<Pos2>| {
+        let frame = |pointer: Option<Pos2>| {
             let mut input = egui::RawInput::default();
             input.events.extend(pointer.map(egui::Event::PointerMoved));
             let mut out = ctx.run_ui(input, |ui| paint(ui, rect, id));
-            let uploads = out.textures_delta.set.iter().filter(|(t, d)| *t != egui::TextureId::default() && d.pos.is_none()).count();
+            let uploads =
+                out.textures_delta.set.iter().filter(|(t, deltas)| **t != egui::TextureId::default() && deltas.iter().any(|d| d.pos.is_none())).count();
             out.textures_delta.clear();
             uploads
         };

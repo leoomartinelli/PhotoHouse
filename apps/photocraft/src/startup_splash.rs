@@ -98,6 +98,12 @@ impl eframe::App for Splash {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _: &mut eframe::Frame) {
+        self.show(ui);
+    }
+}
+
+impl Splash {
+    fn show(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         self.collect_captures(&ctx);
         // Esc skips the animation; the editor still opens (as with Alt+F4 / window close).
@@ -213,6 +219,18 @@ impl Splash {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn escape_closes_only_the_splash_before_the_animation_starts() {
+        let ctx = egui::Context::default();
+        let mut splash = Splash { regular: FontFamily::Proportional, bold: FontFamily::Proportional, start: None, capture_requested: [false; 3] };
+        let mut input = egui::RawInput::default();
+        input.events.push(egui::Event::Key { key: egui::Key::Escape, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() });
+        let mut out = ctx.run_ui(input, |ui| splash.show(ui));
+        out.textures_delta.clear();
+        assert!(out.viewport_output.get(&egui::ViewportId::ROOT).is_some_and(|o| o.commands.iter().any(|c| matches!(c, egui::ViewportCommand::Close))));
+        assert!(splash.start.is_none(), "Escape must skip painting and waiting for the animation");
+    }
 
     #[test]
     fn startup_is_opaque_and_has_no_outer_margin() {
