@@ -3,8 +3,8 @@ name: CI da House
 # Economia de minutos (plano Free da org: 2.000 min/mês):
 # - mudanças só de documentação não disparam o CI (paths-ignore);
 # - PR em rascunho não roda os jobs pesados;
-# - Windows só roda fora de PR (push na main, manual e semanal) e só compila (build + clippy):
-#   compilar os testes passava de 30 min e nenhum teste chegava a rodar;
+# - Windows só roda fora de PR (push na main, manual e semanal) e só roda o clippy, que compila tudo em
+#   modo check e pega erro específico do Windows (testes passavam de 30 min e o build, de 45);
 # - "Arquivos de referência" só roda em PR quando mexe nos crates de formato/render ou no xtask.
 on:
   push:
@@ -87,6 +87,7 @@ jobs:
         if: runner.os == 'Linux'
         run: cargo xtask layers
       - name: Build do editor e CLI
+        if: runner.os == 'Linux'
         run: cargo build --locked -p photocraft -p photocraft-cli
       - name: WebAssembly
         if: runner.os == 'Linux'
