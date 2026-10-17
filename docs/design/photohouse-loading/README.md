@@ -1,9 +1,9 @@
 # Tela de carregamento do PhotoHouse — estudo visual
 
-Protótipo de design da issue #5. Esta pasta é a base de revisão da feature;
-a integração ao editor nativo Rust/egui será feita depois do refinamento visual.
-O HTML é apenas uma referência visual independente, sem dependências de build
-ou alterações no aplicativo.
+Estudo de design da issue #5. Esta pasta continua como referência de revisão.
+A versão escura também está integrada experimentalmente à abertura nativa do
+desktop: veja `apps/photocraft/STARTUP.md`. O HTML é uma referência visual
+independente e não é executado ou incorporado ao editor.
 
 ## Abrir o preview
 
@@ -61,9 +61,9 @@ por quadro, para caber no limite de tamanho; o preview do repositório usa 720 �
 
 - Refinar e aprovar a composição.
 - Refinar o encaixe e o ritmo do GIF com o solicitante.
-- Implementar o visual em Rust/egui, sem incorporar este HTML ao aplicativo.
-- Conectar o indicador às etapas reais da inicialização e validar desempenho,
-  movimento reduzido e transição ao editor.
+- Testar e refinar a abertura nativa Rust/egui, incluindo a transição ao editor.
+- Rever medição das etapas reais da inicialização, movimento reduzido e empacotamento.
+  A versão local solicitada reproduz a animação até 100% antes de abrir o editor.
 
 ## Arte e referência
 

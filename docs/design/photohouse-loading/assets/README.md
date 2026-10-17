@@ -20,4 +20,6 @@ ou autoria adicional foi informada. O MP4 original não é modificado.
 do MP4, em cores completas, para evitar a perda de paleta do GIF. O preview usa a grade para sincronizar
 os quadros à contagem e parar no último quadro em 100%. A mesma origem e autorização
 do vídeo se aplicam ao sprite. Movimento reduzido mostra o quadro final.
-Os assets não foram incorporados ao editor ou aos instaladores nesta etapa.
+O solicitante autorizou posteriormente a integração local da tela de abertura
+nativa em 17/10/2026. O sprite é compartilhado pelo estudo e pelo aplicativo
+desktop (`apps/photocraft/src/startup_splash.rs`); não foi adicionado ao instalador.

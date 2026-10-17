@@ -46,6 +46,7 @@ mod monitor_profile;
 mod photoshop_settings;
 mod screen_color;
 mod services;
+mod startup_splash;
 // Windows gets pen pressure from winit (WM_POINTER); the web runner has its own listener.
 #[cfg(any(target_os = "macos", target_os = "linux", test))]
 mod tablet;
@@ -166,6 +167,14 @@ mod control_port_tests {
 }
 
 fn main() -> eframe::Result {
+    // A separate native event loop keeps the editor's saved geometry and GPU lifecycle intact.
+    if startup_splash::requested() {
+        return match startup_splash::run() {
+            Ok(true) => Ok(()),
+            Ok(false) => std::process::exit(130),
+            Err(error) => Err(error),
+        };
+    }
     // First, so the panic hook and every start-up warning are recorded (`logging`).
     let logger = logging::install();
     crash_guard::install_hook();
@@ -268,6 +277,10 @@ fn main() -> eframe::Result {
     if let Err(message) = linux_libs::preflight(session) {
         eprint!("{message}");
         std::process::exit(1);
+    }
+
+    if !startup_splash::before_editor() {
+        return Ok(());
     }
 
     let control = if let Some(port) = control_port {
