@@ -1,7 +1,8 @@
-//! PhotoHouse's native startup window. One clock drives the counter and the Housinho frames.
+//! PhotoHouse's native startup window: the animated mascot (`photocraft_ui_egui::mascote`) and a counter.
 //! The editor waits for this short-lived child process; its own viewport is never resized.
-//! Anything that goes wrong here (no GPU, tiny texture limit, panic, Esc/Alt+F4) only skips the
-//! splash: the editor always opens afterwards.
+//! Anything that goes wrong here (no GPU, panic, Esc/Alt+F4) only skips the splash: the editor
+//! always opens afterwards. The mascot rasterizes within `max_texture_side` and draws nothing if
+//! that fails.
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -9,15 +10,9 @@ use egui::{Align2, Color32, FontFamily, FontId, Rect, Stroke, StrokeKind, Vec2};
 
 const FLAG: &str = "--photohouse-startup-splash";
 const DURATION: Duration = Duration::from_millis(1600);
-const FRAME_COUNT: usize = 52;
-const COLUMNS: usize = 8;
-const ROWS: usize = 7;
-/// One frame of the sheet (2880 × 2912, frames downscaled from the 720 × 832 design originals).
-const CELL: [usize; 2] = [360, 416];
 const GREEN: Color32 = Color32::from_rgb(191, 254, 0);
 const SURFACE: Color32 = Color32::from_rgb(36, 37, 37);
 const INK: Color32 = Color32::from_rgb(241, 242, 237);
-const SHEET: &[u8] = include_bytes!("../../../assets/splash/housinho-frames.webp");
 
 pub fn requested() -> bool {
     std::env::args_os().any(|arg| arg == FLAG)
@@ -36,36 +31,12 @@ pub fn before_editor() {
 #[derive(Debug, PartialEq)]
 struct Progress {
     percent: u32,
-    frame: usize,
     close: bool,
 }
 
 fn progress(elapsed: Duration) -> Progress {
     let fraction = (elapsed.as_secs_f64() / DURATION.as_secs_f64()).clamp(0.0, 1.0);
-    Progress {
-        percent: if fraction >= 1.0 { 100 } else { (fraction * 100.0).floor() as u32 },
-        frame: if fraction >= 1.0 { FRAME_COUNT - 1 } else { (fraction * (FRAME_COUNT - 1) as f64).floor() as usize },
-        close: elapsed >= DURATION,
-    }
-}
-
-/// Cuts the sheet into one small texture-sized image per frame, so no texture ever approaches
-/// the GPU's `max_texture_side` (2048 on older cards).
-fn frames(rgba: &[u8], width: usize, height: usize) -> Result<Vec<egui::ColorImage>, String> {
-    if width != CELL[0] * COLUMNS || height != CELL[1] * ROWS || rgba.len() != width * height * 4 {
-        return Err(format!("unexpected startup sheet {width}×{height}"));
-    }
-    Ok((0..FRAME_COUNT)
-        .map(|frame| {
-            let (x0, y0) = ((frame % COLUMNS) * CELL[0], (frame / COLUMNS) * CELL[1]);
-            let mut cell = Vec::with_capacity(CELL[0] * CELL[1] * 4);
-            for y in y0..y0 + CELL[1] {
-                let row = (y * width + x0) * 4;
-                cell.extend_from_slice(&rgba[row..row + CELL[0] * 4]);
-            }
-            egui::ColorImage::from_rgba_unmultiplied(CELL, &cell)
-        })
-        .collect())
+    Progress { percent: if fraction >= 1.0 { 100 } else { (fraction * 100.0).floor() as u32 }, close: elapsed >= DURATION }
 }
 
 fn native_options() -> eframe::NativeOptions {
@@ -109,24 +80,12 @@ pub fn run() -> Result<(), eframe::Error> {
                 }
             }
             cc.egui_ctx.set_fonts(fonts);
-            let max_side = cc.egui_ctx.input(|i| i.max_texture_side);
-            if CELL[0].max(CELL[1]) > max_side {
-                return Err(std::io::Error::other(format!("GPU max texture side {max_side} is too small for the startup animation")).into());
-            }
-            let image = photocraft_codecs::decode(SHEET).map_err(|error| std::io::Error::other(error.to_string()))?;
-            let frames = frames(&image.to_rgba8(), image.width() as usize, image.height() as usize).map_err(std::io::Error::other)?;
-            let frames = frames
-                .into_iter()
-                .enumerate()
-                .map(|(i, color)| cc.egui_ctx.load_texture(format!("photohouse-startup-housinho-{i}"), color, egui::TextureOptions::LINEAR))
-                .collect();
-            Ok(Box::new(Splash { frames, regular, bold, start: None, capture_requested: [false; 3] }))
+            Ok(Box::new(Splash { regular, bold, start: None, capture_requested: [false; 3] }))
         }),
     )
 }
 
 struct Splash {
-    frames: Vec<egui::TextureHandle>,
     regular: FontFamily,
     bold: FontFamily,
     start: Option<Instant>,
@@ -169,9 +128,7 @@ impl Splash {
         let split = rect.left() + rect.width() * 0.4237;
         painter.rect_filled(rect, 0.0, SURFACE);
         let art = Rect::from_min_max(egui::pos2(split, rect.top()), rect.max);
-        if let Some(texture) = self.frames.get(state.frame).or(self.frames.last()) {
-            egui::Image::new((texture.id(), texture.size_vec2())).paint_at(ui, art);
-        }
+        photocraft_ui_egui::mascote::paint(ui, art.shrink(art.width() * 0.12), egui::Id::new("splash-mascote"));
         // Keep the stroke clear of Windows' rounded outer window clip.
         painter.rect_stroke(rect.shrink(2.0), 14.0, Stroke::new(1.5, GREEN), StrokeKind::Inside);
         let left = rect.left() + 32.0 * scale;
@@ -266,22 +223,12 @@ mod tests {
     }
 
     #[test]
-    fn animation_and_counter_share_endpoints_and_close_on_the_last_frame() {
-        assert_eq!(progress(Duration::ZERO), Progress { percent: 0, frame: 0, close: false });
-        assert_eq!(progress(Duration::from_millis(800)), Progress { percent: 50, frame: 25, close: false });
-        assert_eq!(progress(Duration::from_millis(1599)), Progress { percent: 99, frame: 50, close: false });
-        assert_eq!(progress(DURATION), Progress { percent: 100, frame: 51, close: true });
-        assert_eq!(progress(Duration::from_secs(u64::MAX)).frame, 51);
+    fn counter_ends_at_100_and_closes_without_extra_hold() {
+        assert_eq!(progress(Duration::ZERO), Progress { percent: 0, close: false });
+        assert_eq!(progress(Duration::from_millis(800)), Progress { percent: 50, close: false });
+        assert_eq!(progress(Duration::from_millis(1599)), Progress { percent: 99, close: false });
+        assert_eq!(progress(DURATION), Progress { percent: 100, close: true });
+        assert_eq!(progress(Duration::from_secs(u64::MAX)).percent, 100);
         assert!(DURATION <= Duration::from_secs(2));
-    }
-
-    #[test]
-    fn embedded_sheet_splits_into_small_frame_textures() {
-        let image = photocraft_codecs::decode(SHEET).expect("startup asset decodes");
-        let frames = frames(&image.to_rgba8(), image.width() as usize, image.height() as usize).expect("sheet splits");
-        assert_eq!(frames.len(), FRAME_COUNT);
-        // Fits the smallest real-world limit (GeForce G210: 2048) with room to spare.
-        assert!(frames.iter().all(|f| f.size == CELL && f.size[0].max(f.size[1]) <= 2048));
-        assert!(super::frames(&[0; 16], 2, 2).is_err());
     }
 }

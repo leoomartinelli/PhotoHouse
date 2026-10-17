@@ -7,18 +7,17 @@ Assim, o tamanho, a posição e a persistência do editor não recebem a geometr
 da abertura. Não há navegador, HTML ou dependência nova em tempo de execução.
 
 A janela usa o modo escuro aprovado: fundo `#242525`, acentos `#BFFE00`,
-proporção 3:2, assinatura e versão obtida de `CARGO_PKG_VERSION`. A folha
-`assets/splash/housinho-frames.webp` (os 52 quadros do estudo visual, reduzidos
-para 360 × 416) é dividida em uma textura por quadro, abaixo do limite
-`max_texture_side` de qualquer GPU (2048 em placas antigas como a GeForce G210).
-O relógio de 1,6 segundo controla percentual e quadro; ao atingir 100%, a
-abertura fecha e o editor inicia, sem pausa extra.
+proporção 3:2, assinatura e versão obtida de `CARGO_PKG_VERSION`. À direita fica
+o mascote animado (`photocraft_ui_egui::mascote`, camadas SVG em
+`assets/mascote/camadas/`), o mesmo da tela inicial; ele é rasterizado dentro do
+limite `max_texture_side` da GPU. O relógio de 1,6 segundo controla o
+percentual; ao atingir 100%, a abertura fecha e o editor inicia, sem pausa extra.
 Este percentual descreve a animação de abertura, não a medição das tarefas do editor.
 
 A janela é opaca, com contorno verde `#BFFE00` de 1,5 ponto, recuado 2 pontos
 para dentro e com cantos de 14 pontos, evitando o recorte externo do Windows.
 Não há brilho ou margem externa. O conteúdo ocupa
-toda a área de 720 × 480 pontos, com fundo escuro até as bordas e a arte à direita.
+toda a área de 720 × 480 pontos, com fundo escuro até as bordas e o mascote à direita.
 
 Esc, Alt+F4 ou fechar a abertura apenas pula a animação; o editor abre
 normalmente. Qualquer falha da abertura (inclusive pânico, registrado no log)
