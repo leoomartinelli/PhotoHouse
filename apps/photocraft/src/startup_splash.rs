@@ -165,7 +165,8 @@ impl Splash {
         painter.rect_filled(rect, 0.0, SURFACE);
         let art = Rect::from_min_max(egui::pos2(split, rect.top()), rect.max);
         egui::Image::new((self.texture.id(), self.texture.size_vec2())).uv(frame_uv(state.frame)).paint_at(ui, art);
-        painter.rect_stroke(rect, 0.0, Stroke::new(1.5, GREEN), StrokeKind::Inside);
+        // Keep the stroke clear of Windows' rounded outer window clip.
+        painter.rect_stroke(rect.shrink(2.0), 8.0, Stroke::new(1.5, GREEN), StrokeKind::Inside);
         let left = rect.left() + 32.0 * scale;
         let right = split - 32.0 * scale;
         let brand = egui::pos2(left, rect.top() + 28.0 * scale);

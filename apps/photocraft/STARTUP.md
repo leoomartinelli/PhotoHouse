@@ -13,7 +13,9 @@ O relógio de 4,16 segundos controla percentual e quadro; ao atingir 100%, o
 quadro final permanece parado por 200 ms, a abertura fecha e o editor inicia.
 Este percentual descreve a animação de abertura, não a medição das tarefas do editor.
 
-A janela é opaca, com contorno verde `#BFFE00` de 1,5 ponto, sem brilho ou margem externa. O conteúdo ocupa
+A janela é opaca, com contorno verde `#BFFE00` de 1,5 ponto, recuado 2 pontos
+para dentro e com cantos de 8 pontos, evitando o recorte externo do Windows.
+Não há brilho ou margem externa. O conteúdo ocupa
 toda a área de 720 × 480 pontos, com fundo escuro até as bordas e a arte à direita.
 
 Esc ou fechar a abertura cancela o lançamento inteiro. Falha ao criar a janela
