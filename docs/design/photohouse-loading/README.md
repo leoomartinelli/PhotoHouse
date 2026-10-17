@@ -14,14 +14,16 @@ Use **Repetir animação** para reiniciar ambos. O progresso ainda é demonstrat
 não mede a inicialização do editor. Com movimento reduzido, mostra diretamente
 100% e o quadro final, sem animar.
 
-Compare as versões **Preto** e **Off-white** pelos botões abaixo da janela.
+Compare as versões **Preto** e **Verde claro** pelos botões abaixo da janela.
 As duas usam a mesma linha de tempo; alternar a versão mantém o progresso atual.
 
 ## Direção atual
 
-- Duas versões para revisão: preto com texto claro e off-white com texto preto.
-- Destaques verde neon `#BFFE00` preservados como segundo nível da hierarquia,
-  com luz ao redor da janela nas duas versões.
+- Duas versões: preto com texto claro e verde claro `#DDFDE6` com texto preto.
+- No modo claro, a escrita antes neon e a barra usam `#1C7E67`.
+- A luz e a borda externas continuam verde neon `#BFFE00` nas duas versões.
+- Rodapé em ambas: **The House** Studio, com apenas “The House” em negrito,
+  seguido de “Versão 0.8.2”, conforme `workspace.package.version` em `Cargo.toml`.
 - Família Roboto; carregamento à esquerda e percentual ajustado à largura da barra.
 - Housinho à direita, com a ilustração inteira e suas proporções preservadas.
 - Janela de proporção 3:2, próxima do estudo inicial, com GIF vertical 490 × 566.

@@ -7,7 +7,7 @@ const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 assert(fs.existsSync(path.join(__dirname, 'assets/housinho-frames.webp')));
 assert(html.includes('data-variant="Preto"'));
-assert(html.includes('data-variant="Off-white"'));
+assert(html.includes('data-variant="Verde claro"'));
 function setup(reduced) {
   const pending = new Map();
   let requestId = 0;
@@ -19,7 +19,7 @@ function setup(reduced) {
     addEventListener(k, fn) {this[k] = fn;},
     getContext: () => ({clearRect() {}, drawImage() {}})
   });
-  const views = ['Preto', 'Off-white'].map(name => {
+  const views = ['Preto', 'Verde claro'].map(name => {
     const nodes = {};
     return {nodes, dataset: {variant: name}, querySelector(s) {return nodes[s] ??= makeNode();}};
   });

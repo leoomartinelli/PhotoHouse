@@ -24,25 +24,27 @@ body{margin:0;background:#191b16;color:#eef0e8;font-family:Roboto,Arial,sans-ser
           <section class="ph-loading" aria-label="Carregamento">
             <div class="ph-number" aria-hidden="true"><span class="ph-value">000</span><span class="ph-percent">%</span></div>
             <div class="ph-track" role="progressbar" aria-label="Carregamento demonstrativo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ph-fill"></div></div>
+        <footer class="ph-footer"><span><strong>The House</strong> Studio</span><span class="ph-version">Versão 0.8.2</span></footer>
           </section>
           <div class="ph-mascot"><canvas class="ph-art" width="490" height="566" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
         </div>
       </div>
     </section>
-    <section data-variant="Off-white" aria-label="Versão com lado esquerdo off-white" hidden>
+    <section data-variant="Verde claro" aria-label="Versão com lado esquerdo verde claro" hidden>
       <div class="ph-window ph-light">
         <header class="ph-header"><span class="ph-brand">photo<span>house</span></span></header>
         <div class="ph-content">
           <section class="ph-loading" aria-label="Carregamento">
             <div class="ph-number" aria-hidden="true"><span class="ph-value">000</span><span class="ph-percent">%</span></div>
             <div class="ph-track" role="progressbar" aria-label="Carregamento demonstrativo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ph-fill"></div></div>
+        <footer class="ph-footer"><span><strong>The House</strong> Studio</span><span class="ph-version">Versão 0.8.2</span></footer>
           </section>
           <div class="ph-mascot"><canvas class="ph-art" width="490" height="566" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
         </div>
       </div>
     </section>
   </div>
-  <div class="ph-preview-controls" data-local-variants aria-label="Escolher versão"><button class="btn" type="button" data-show="Preto" aria-pressed="true">Preto</button><button class="btn" type="button" data-show="Off-white" aria-pressed="false">Off-white</button></div>
+  <div class="ph-preview-controls" data-local-variants aria-label="Escolher versão"><button class="btn" type="button" data-show="Preto" aria-pressed="true">Preto</button><button class="btn" type="button" data-show="Verde claro" aria-pressed="false">Verde claro</button></div>
   <div class="ph-preview-controls"><span>CONTAGEM + HOUSINHO SINCRONIZADOS</span><button type="button" class="btn btn-ghost ph-replay" disabled>Repetir animação</button></div>
   <span class="sr-only ph-announcement" aria-live="polite">Preparando animação.</span>
 </div>
@@ -51,23 +53,26 @@ body{margin:0;background:#191b16;color:#eef0e8;font-family:Roboto,Arial,sans-ser
 #ph-loading-preview{max-width:780px;margin:0 auto;font-family:Roboto,Arial,sans-serif}
 #ph-loading-preview [data-variant]{padding:30px 22px 18px;box-sizing:border-box}
 #ph-loading-preview .ph-window{--ph-green:#bffe00;--ph-surface:#070807;--ph-ink:#f1f2ed;--ph-track:#252820;background:var(--ph-surface);color:var(--ph-ink);border:1px solid var(--ph-green);border-radius:24px;overflow:hidden;box-shadow:0 0 3px #bffe00cc,0 0 14px #bffe0066,0 0 30px #bffe0033;position:relative}
-#ph-loading-preview .ph-light{--ph-surface:#f2f0e9;--ph-ink:#11140e;--ph-track:#d6d6ca}
+#ph-loading-preview .ph-light{--ph-surface:#ddfde6;--ph-ink:#11140e;--ph-track:#c0dfcc;--ph-accent:#1c7e67}
 #ph-loading-preview .ph-header{position:absolute;top:28px;left:32px;z-index:1}
 #ph-loading-preview .ph-brand{font-size:24px;font-weight:800;letter-spacing:-1.3px;white-space:nowrap}
-#ph-loading-preview .ph-brand>span{color:var(--ph-green)}
+#ph-loading-preview .ph-brand>span{color:var(--ph-accent,var(--ph-green))}
 #ph-loading-preview .ph-content{display:grid;grid-template-columns:minmax(0,42.37fr) minmax(0,57.63fr);aspect-ratio:3/2;gap:0;margin:0;align-items:center}
 #ph-loading-preview .ph-loading{padding:32px;min-width:0;box-sizing:border-box}
 #ph-loading-preview .ph-number{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin:25px 0 23px;white-space:nowrap;width:100%}
 #ph-loading-preview .ph-value{display:inline-block;flex:none;font-size:var(--ph-number-size,100px);line-height:.85;font-weight:800;letter-spacing:-8px;font-variant-numeric:tabular-nums}
-#ph-loading-preview .ph-percent{flex:none;color:var(--ph-green);font-size:35px;line-height:1;font-weight:400;margin-top:-3px}
+#ph-loading-preview .ph-percent{flex:none;color:var(--ph-accent,var(--ph-green));font-size:35px;line-height:1;font-weight:400;margin-top:-3px}
 #ph-loading-preview .ph-track{height:2px;background:var(--ph-track);overflow:hidden}
-#ph-loading-preview .ph-fill{height:100%;width:0;background:var(--ph-green)}
+#ph-loading-preview .ph-fill{height:100%;width:0;background:var(--ph-accent,var(--ph-green))}
+#ph-loading-preview .ph-footer{position:absolute;bottom:28px;left:32px;width:calc(42.37% - 64px);display:flex;flex-direction:column;gap:6px;color:var(--ph-ink);font-size:13px;line-height:1.3;font-weight:400}
+#ph-loading-preview .ph-footer strong{font-weight:700}
+#ph-loading-preview .ph-version{font-size:11px;opacity:.65}
 #ph-loading-preview .ph-mascot{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;height:100%;padding:0;background:#e7e7e7}
 #ph-loading-preview .ph-art{display:block;width:100%;height:100%;object-fit:contain;border:0;border-radius:0}
 #ph-loading-preview .ph-preview-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 22px 0}
 #ph-loading-preview [data-local-variants]{justify-content:flex-start}
 #ph-loading-preview .ph-preview-controls>span{font:10px/1.5 Roboto,Arial,sans-serif;opacity:.65;letter-spacing:.5px}
-@media(max-width:540px){#ph-loading-preview .ph-header{top:24px;left:22px}#ph-loading-preview .ph-content{grid-template-columns:1fr;aspect-ratio:auto}#ph-loading-preview .ph-loading{padding:82px 22px 32px}#ph-loading-preview .ph-mascot,#ph-loading-preview .ph-art{height:auto}}
+@media(max-width:540px){#ph-loading-preview .ph-header{top:24px;left:22px}#ph-loading-preview .ph-content{grid-template-columns:1fr;aspect-ratio:auto}#ph-loading-preview .ph-loading{padding:82px 22px 100px;position:relative}#ph-loading-preview .ph-mascot,#ph-loading-preview .ph-art{height:auto}#ph-loading-preview .ph-footer{bottom:28px;left:22px;width:calc(100% - 44px)}}
 </style>
 <script>
 (()=>{
