@@ -6,20 +6,15 @@ interna `--photohouse-startup-splash`; o processo principal espera sua conclusã
 Assim, o tamanho, a posição e a persistência do editor não recebem a geometria
 da abertura. Não há navegador, HTML ou dependência nova em tempo de execução.
 
-A janela usa o modo escuro aprovado: fundo `#242525`, acentos e luz `#BFFE00`,
+A janela usa o modo escuro aprovado: fundo `#242525`, acentos `#BFFE00`,
 proporção 3:2, assinatura e versão obtida de `CARGO_PKG_VERSION`. Uma textura
 compartilhada com o estudo visual fornece os 52 quadros de alta resolução.
 O relógio de 4,16 segundos controla percentual e quadro; ao atingir 100%, o
 quadro final permanece parado por 200 ms, a abertura fecha e o editor inicia.
 Este percentual descreve a animação de abertura, não a medição das tarefas do editor.
 
-No Windows, a abertura usa DX12 com `DxgiFromVisual` (DirectComposition),
-alpha pré-multiplicado e `WS_EX_NOREDIRECTIONBITMAP`. O swapchain padrão
-`DxgiFromHwnd` não suporta transparência e deixa uma moldura branca apesar do
-fundo transparente no framebuffer. O serviço nativo remove também a moldura do
-sistema. Três sombras desfocadas desenham a luz neon em uma margem transparente
-de 32 pontos, mantendo a área principal em 720 × 480 pontos.
-Referência: [wgpu: Dx12SwapchainKind](https://docs.rs/wgpu/30.0.0/wgpu/enum.Dx12SwapchainKind.html).
+A janela é opaca, sem brilho, margem externa ou contorno. O conteúdo ocupa
+toda a área de 720 × 480 pontos, com fundo escuro até as bordas e a arte à direita.
 
 Esc ou fechar a abertura cancela o lançamento inteiro. Falha ao criar a janela
 de abertura é registrada e permite abrir o editor para recuperação.
