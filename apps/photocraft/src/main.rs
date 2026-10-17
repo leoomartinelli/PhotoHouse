@@ -168,12 +168,10 @@ mod control_port_tests {
 
 fn main() -> eframe::Result {
     // A separate native event loop keeps the editor's saved geometry and GPU lifecycle intact.
+    // Logged like the editor (panics included); a failure only skips the splash.
     if startup_splash::requested() {
-        return match startup_splash::run() {
-            Ok(true) => Ok(()),
-            Ok(false) => std::process::exit(130),
-            Err(error) => Err(error),
-        };
+        let _ = logging::install();
+        return startup_splash::run();
     }
     // First, so the panic hook and every start-up warning are recorded (`logging`).
     let logger = logging::install();
@@ -279,8 +277,14 @@ fn main() -> eframe::Result {
         std::process::exit(1);
     }
 
-    if !startup_splash::before_editor() {
-        return Ok(());
+    // Interactive launches only: automation (`--control`), `--safe-gpu` and the Linux X11
+    // preference open the editor directly instead of a second window with default GPU settings.
+    #[cfg(target_os = "linux")]
+    let prefers_x11 = gpu_startup::read_display_server(services::prefs_file().as_deref()) == photocraft_engine::prefs::LinuxDisplayServer::X11;
+    #[cfg(not(target_os = "linux"))]
+    let prefers_x11 = false;
+    if control_port.is_none() && !safe_gpu && !prefers_x11 {
+        startup_splash::before_editor();
     }
 
     let control = if let Some(port) = control_port {
