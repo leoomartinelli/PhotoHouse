@@ -6,6 +6,12 @@ code and original assets are MIT OR Apache-2.0 (see [`LICENSE-MIT`](LICENSE-MIT)
 in the same change; third-party assets must be permissively licensed and keep their license file
 next to them.
 
+## PhotoHouse design studies (not bundled in the app)
+
+| Path | Title | Author | Source | License / authorization |
+|---|---|---|---|---|
+| `docs/design/photohouse-loading/assets/housinho-base.webp` | Mascote Engrenagem em Explosão Colorida — loading-screen study | Not specified by user | User attachment, 2026-10-17; compressed copy retaining the original composition | User explicitly supplied the art for the prototype and requested its versioning in the feature branch/PR. No separate public license supplied; see adjacent `assets/README.md`. |
+
 ## Bundled in the app
 
 ### Customized PhotoHouse installer
