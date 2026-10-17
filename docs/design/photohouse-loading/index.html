@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PhotoHouse — carregamento sincronizado</title>
+<style>
+body{margin:0;background:#191b16;color:#eef0e8;font-family:Roboto,Arial,sans-serif}
+.preview-page{max-width:780px;margin:24px auto;padding:0 8px}
+.btn{font:inherit;background:transparent;color:inherit;border:1px solid #62665a;border-radius:6px;padding:8px 12px;cursor:pointer}
+.btn[aria-pressed="true"]{background:#353a2b}
+.btn:focus-visible{outline:2px solid #bffe00;outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<main class="preview-page">
+<div id="ph-loading-preview">
+  <div class="viz-carousel viz-dotted-background" aria-label="Versões da tela de carregamento" data-previous-label="Anterior" data-next-label="Próxima">
+    <section data-variant="Preto" aria-label="Versão com lado esquerdo preto">
+      <div class="ph-window">
+        <header class="ph-header"><span class="ph-brand">photo<span>house</span></span></header>
+        <div class="ph-content">
+          <section class="ph-loading" aria-label="Carregamento">
+            <div class="ph-number" aria-hidden="true"><span class="ph-value">000</span><span class="ph-percent">%</span></div>
+            <div class="ph-track" role="progressbar" aria-label="Carregamento demonstrativo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ph-fill"></div></div>
+        <footer class="ph-footer"><span><strong>The House</strong> Studio</span><span class="ph-version">Versão 0.8.2</span></footer>
+          </section>
+          <div class="ph-mascot"><canvas class="ph-art" width="720" height="832" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
+        </div>
+      </div>
+    </section>
+    <section data-variant="Verde claro" aria-label="Versão com lado esquerdo verde claro" hidden>
+      <div class="ph-window ph-light">
+        <header class="ph-header"><span class="ph-brand">photo<span>house</span></span></header>
+        <div class="ph-content">
+          <section class="ph-loading" aria-label="Carregamento">
+            <div class="ph-number" aria-hidden="true"><span class="ph-value">000</span><span class="ph-percent">%</span></div>
+            <div class="ph-track" role="progressbar" aria-label="Carregamento demonstrativo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="ph-fill"></div></div>
+        <footer class="ph-footer"><span><strong>The House</strong> Studio</span><span class="ph-version">Versão 0.8.2</span></footer>
+          </section>
+          <div class="ph-mascot"><canvas class="ph-art" width="720" height="832" role="img" aria-label="Quadro do Housinho sincronizado com o carregamento"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div class="ph-preview-controls" data-local-variants aria-label="Escolher versão"><button class="btn" type="button" data-show="Preto" aria-pressed="true">Preto</button><button class="btn" type="button" data-show="Verde claro" aria-pressed="false">Verde claro</button></div>
+  <div class="ph-preview-controls"><span>CONTAGEM + HOUSINHO SINCRONIZADOS</span><button type="button" class="btn btn-ghost ph-replay" disabled>Repetir animação</button></div>
+  <span class="sr-only ph-announcement" aria-live="polite">Preparando animação.</span>
+</div>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;800&display=swap');
+#ph-loading-preview{max-width:780px;margin:0 auto;font-family:Roboto,Arial,sans-serif}
+#ph-loading-preview [data-variant]{padding:30px 22px 18px;box-sizing:border-box}
+#ph-loading-preview .ph-window{--ph-green:#bffe00;--ph-surface:#242525;--ph-ink:#f1f2ed;--ph-track:#252820;background:var(--ph-surface);color:var(--ph-ink);border:1px solid var(--ph-green);border-radius:24px;overflow:hidden;box-shadow:0 0 3px #bffe00cc,0 0 14px #bffe0066,0 0 30px #bffe0033;position:relative}
+#ph-loading-preview .ph-light{--ph-surface:#ddfde6;--ph-ink:#11140e;--ph-track:#c0dfcc;--ph-accent:#1c7e67}
+#ph-loading-preview .ph-header{position:absolute;top:28px;left:32px;z-index:1}
+#ph-loading-preview .ph-brand{font-size:24px;font-weight:800;letter-spacing:-1.3px;white-space:nowrap}
+#ph-loading-preview .ph-brand>span{color:var(--ph-accent,var(--ph-green))}
+#ph-loading-preview .ph-content{display:grid;grid-template-columns:minmax(0,42.37fr) minmax(0,57.63fr);aspect-ratio:3/2;gap:0;margin:0;align-items:center}
+#ph-loading-preview .ph-loading{padding:32px;min-width:0;box-sizing:border-box}
+#ph-loading-preview .ph-number{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;margin:25px 0 23px;white-space:nowrap;width:100%}
+#ph-loading-preview .ph-value{display:inline-block;flex:none;font-size:var(--ph-number-size,100px);line-height:.85;font-weight:800;letter-spacing:-8px;font-variant-numeric:tabular-nums}
+#ph-loading-preview .ph-percent{flex:none;color:var(--ph-accent,var(--ph-green));font-size:35px;line-height:1;font-weight:400;margin-top:-3px}
+#ph-loading-preview .ph-track{height:2px;background:var(--ph-track);overflow:hidden}
+#ph-loading-preview .ph-fill{height:100%;width:0;background:var(--ph-accent,var(--ph-green))}
+#ph-loading-preview .ph-footer{position:absolute;bottom:28px;left:32px;width:calc(42.37% - 64px);display:flex;flex-direction:column;gap:0;color:var(--ph-ink);font-size:13px;line-height:1.1;font-weight:400}
+#ph-loading-preview .ph-footer strong{font-weight:700}
+#ph-loading-preview .ph-version{font-size:11px;opacity:.65}
+#ph-loading-preview .ph-mascot{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;height:100%;padding:0;background:#e7e7e7}
+#ph-loading-preview .ph-art{display:block;width:100%;height:100%;object-fit:contain;border:0;border-radius:0}
+#ph-loading-preview .ph-preview-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 22px 0}
+#ph-loading-preview [data-local-variants]{justify-content:flex-start}
+#ph-loading-preview .ph-preview-controls>span{font:10px/1.5 Roboto,Arial,sans-serif;opacity:.65;letter-spacing:.5px}
+@media(max-width:540px){#ph-loading-preview .ph-header{top:24px;left:22px}#ph-loading-preview .ph-content{grid-template-columns:1fr;aspect-ratio:auto}#ph-loading-preview .ph-loading{padding:82px 22px 100px;position:relative}#ph-loading-preview .ph-mascot,#ph-loading-preview .ph-art{height:auto}#ph-loading-preview .ph-footer{bottom:28px;left:22px;width:calc(100% - 44px)}}
+</style>
+<script>
+(()=>{
+ const root=document.getElementById('ph-loading-preview');
+ const views=Array.from(root.querySelectorAll('[data-variant]')).map(element=>({element,value:element.querySelector('.ph-value'),number:element.querySelector('.ph-number'),percent:element.querySelector('.ph-percent'),fill:element.querySelector('.ph-fill'),progress:element.querySelector('.ph-track'),canvas:element.querySelector('.ph-art'),context:element.querySelector('.ph-art').getContext('2d')}));
+ const replayButton=root.querySelector('.ph-replay'),announcement=root.querySelector('.ph-announcement');
+ const settings={duration:4.16};
+ const sheet=new Image(),count=52,columns=8,rows=7;
+ const motion=matchMedia('(prefers-reduced-motion: reduce)');
+ let ready=false,start=0,request=0,lastFrame=-1;
+ function fitNumbers(){
+   const measure=document.createElement('canvas').getContext('2d');
+   if(!measure)return;
+   measure.font='800 100px Roboto, Arial, sans-serif';
+   const width=measure.measureText('100').width;
+   views.forEach(view=>{const available=view.number.clientWidth-view.percent.getBoundingClientRect().width-9;if(available>0&&width>0)view.value.style.setProperty('--ph-number-size',((available+24)*100/width)+'px');});
+ }
+ const resize=new ResizeObserver(fitNumbers);
+ views.forEach(view=>resize.observe(view.number));
+ if(document.fonts)document.fonts.ready.then(fitNumbers);
+ fitNumbers();
+ function render(t){
+   const ratio=Math.max(0,Math.min(1,t));
+   const percentage=ratio===1?100:Math.floor(ratio*100);
+   const frame=ratio===1?count-1:Math.floor(ratio*(count-1));
+   views.forEach(view=>{view.value.textContent=String(percentage).padStart(3,'0');view.fill.style.width=percentage+'%';view.progress.setAttribute('aria-valuenow',String(percentage));});
+   if(!ready||frame===lastFrame)return;
+   const w=sheet.naturalWidth/columns,h=sheet.naturalHeight/rows;
+   views.forEach(view=>{if(view.context){view.context.clearRect(0,0,view.canvas.width,view.canvas.height);view.context.drawImage(sheet,(frame%columns)*w,Math.floor(frame/columns)*h,w,h,0,0,view.canvas.width,view.canvas.height);view.canvas.dataset.frame=String(frame);}});
+   lastFrame=frame;
+ }
+ function tick(now){
+   const t=Math.min(1,(now-start)/(settings.duration*1000));
+   render(t);
+   if(t<1)request=requestAnimationFrame(tick);
+   else{request=0;announcement.textContent='100%. Animação parada no último quadro.';}
+ }
+ function replay(){
+   if(!ready)return;
+   cancelAnimationFrame(request);request=0;lastFrame=-1;
+   if(motion.matches){render(1);announcement.textContent='100%. Quadro final, com movimento reduzido.';return;}
+   start=performance.now();render(0);announcement.textContent='Contagem e animação iniciadas juntas.';request=requestAnimationFrame(tick);
+ }
+ replayButton.addEventListener('click',replay);
+ motion.addEventListener('change',()=>{if(motion.matches&&ready){cancelAnimationFrame(request);request=0;render(1);announcement.textContent='100%. Quadro final, com movimento reduzido.';}});
+ sheet.onload=()=>{ready=true;replayButton.disabled=false;replay();};
+ sheet.onerror=()=>{announcement.textContent='Não foi possível carregar os quadros do Housinho.';};
+ sheet.src='assets/housinho-frames.webp';
+ const local=root.querySelector('[data-local-variants]');
+ if(local)local.querySelectorAll('[data-show]').forEach(button=>button.addEventListener('click',()=>{views.forEach(view=>{view.element.hidden=view.element.dataset.variant!==button.dataset.show;});local.querySelectorAll('[data-show]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));fitNumbers();}));
+})();
+</script>
+</main>
+</body>
+</html>

@@ -2631,27 +2631,17 @@ fn start_screen(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     // File › Open Recent, newest first (on the web there are no paths to reopen).
     let recent: Vec<String> = if cfg!(target_arch = "wasm32") { Vec::new() } else { app.ui.recent_files.iter().take(HOME_RECENT).cloned().collect() };
     let recent_h = if recent.is_empty() { 0.0 } else { 34.0 + recent.len() as f32 * HOME_RECENT_ROW };
-    let mascot_size = 160.0;
-    let card_h = (330.0 + mascot_size + 14.0 + recent_h).min(area.height() - 16.0);
+    let mascot = egui::vec2(200.0, 200.0 * crate::mascote::ASPECT);
+    let card_h = (264.0 + mascot.y + recent_h).min(area.height() - 16.0);
     let card = Rect::from_center_size(area.center(), egui::vec2(460.0, card_h));
     let new_label = crate::shortcuts::command_label(app, "New document…", "file.new");
     let open_label = crate::shortcuts::command_label(app, "Open…", "file.open");
     ui.scope_builder(egui::UiBuilder::new().max_rect(card), |ui| {
         ui.vertical_centered(|ui| {
-            let (mr, _) = ui.allocate_exact_size(egui::vec2(mascot_size, mascot_size), Sense::hover());
-            let mascot_rect = Rect::from_center_size(egui::pos2(card.center().x, mr.center().y), egui::vec2(mascot_size, mascot_size));
-            crate::brand::paint_mascot(ui, mascot_rect);
-            ui.add_space(10.0);
-            ui.horizontal(|ui| {
-                let title = ui.painter().layout_no_wrap(tl!("PhotoHouse").into(), crate::theme::semibold(38.0), t.text);
-                let by = ui.painter().layout_no_wrap(tl!("open source").into(), egui::FontId::proportional(13.0), t.text_faint);
-                let total = title.size().x + by.size().x + 10.0;
-                ui.add_space(((card.width() - total) / 2.0).max(0.0));
-                let (r, _) = ui.allocate_exact_size(title.size(), Sense::hover());
-                ui.painter().galley(r.min, title, t.text);
-                let (r2, _) = ui.allocate_exact_size(egui::vec2(by.size().x + 10.0, r.height()), Sense::hover());
-                ui.painter().galley(egui::pos2(r2.left() + 10.0, r.bottom() - by.size().y - 8.0), by, t.text_faint);
-            });
+            let (mr, response) = ui.allocate_exact_size(mascot, Sense::hover());
+            crate::mascote::paint(ui, Rect::from_center_size(egui::pos2(card.center().x, mr.center().y), mascot), response.id);
+            ui.add_space(6.0);
+            ui.label(egui::RichText::new(tl!("PhotoHouse")).font(crate::theme::semibold(38.0)).color(t.text));
             ui.add_space(6.0);
             ui.label(egui::RichText::new(tl!("Create a new document or open an existing file.")).color(t.text_dim).size(14.0));
             ui.add_space(22.0);
@@ -2679,10 +2669,8 @@ fn start_screen(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
                 ui.add_space(22.0);
                 home_recent(app, ui, &recent);
             }
-            ui.add_space(26.0);
-            crate::links::discord_button(app, ui, 190.0);
-            ui.add_space(10.0);
-            crate::links::link_row(app, ui);
+            ui.add_space(22.0);
+            crate::links::site_link(app, ui);
         });
     });
 }
@@ -6604,6 +6592,29 @@ mod tests {
         h.run_steps(2);
         assert!(listed(&h).is_empty());
         assert!(h.state().0.session.documents().is_empty());
+    }
+
+    /// #16: the Home screen keeps the site link and no longer shows the Discord button or the
+    /// GitHub and ArtCraft links.
+    #[test]
+    fn home_screen_shows_the_site_link_but_no_community_links() {
+        use egui_kittest::kittest::Queryable;
+        let app = PhotocraftApp::new(photocraft_engine::Session::new(), crate::Services::default());
+        let mut h = egui_kittest::Harness::builder().with_size(egui::vec2(900.0, 760.0)).build_ui_state(
+            |ui, (app, ready): &mut (PhotocraftApp, bool)| {
+                if *ready {
+                    egui::CentralPanel::default().frame(egui::Frame::NONE).show(ui, |ui| document_area(app, ui));
+                }
+            },
+            (app, false),
+        );
+        PhotocraftApp::setup_context(&h.ctx, crate::theme::ThemeKind::default());
+        h.state_mut().1 = true;
+        h.run_steps(3);
+        assert!(h.query_by_label("PhotoHouse website").is_some());
+        for gone in ["Join us on Discord", "GitHub", "ArtCraft"] {
+            assert!(h.query_by_label(gone).is_none(), "{gone}");
+        }
     }
 
     #[test]
