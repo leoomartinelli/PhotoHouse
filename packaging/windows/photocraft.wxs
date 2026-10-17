@@ -17,18 +17,18 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Package
-      Name="PhotoCraft"
+      Name="PhotoHouse"
       Manufacturer="Learning Machines LLC"
       Version="$(var.Version)"
       UpgradeCode="D9660F32-2D0A-4ABE-B73D-17BE25F1542C"
       Scope="perMachine"
       Compressed="yes"
       Language="1033">
-    <SummaryInformation Description="PhotoCraft image editor" Manufacturer="Learning Machines LLC" />
+    <SummaryInformation Description="PhotoHouse image editor" Manufacturer="Learning Machines LLC" />
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
     <MajorUpgrade AllowSameVersionUpgrades="yes"
-        DowngradeErrorMessage="A newer version of PhotoCraft is already installed." />
+        DowngradeErrorMessage="A newer version of PhotoHouse is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <!-- MSI caches this icon using its Id as the filename. Advertised shortcuts to an
@@ -49,7 +49,7 @@
       <RegistrySearch Id="PreviousInstallFolder" Root="HKLM" Key="Software\PhotoCraft" Name="InstallDir" Type="raw" />
     </Property>
 
-    <Feature Id="Main" Title="PhotoCraft" Level="1">
+    <Feature Id="Main" Title="PhotoHouse" Level="1">
       <ComponentGroupRef Id="PhotocraftFiles" />
     </Feature>
 
@@ -71,8 +71,8 @@
     <Property Id="PhotocraftVersion" Value="$(var.DisplayVersion)" />
 
     <!-- Finish page: say where to find the app, and offer to start it (ticked by default). -->
-    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="PhotoCraft $(var.DisplayVersion) is installed. You can start it any time from the Start menu." />
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch PhotoCraft" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="PhotoHouse $(var.DisplayVersion) is installed. You can start it any time from the Start menu." />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch PhotoHouse" />
     <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
     <Property Id="WixShellExecTarget" Value="[#PhotocraftExe]" />
     <!-- Runs in the wizard's own (unelevated) process, so the app starts as the user, not as admin. -->
@@ -83,13 +83,13 @@
     <ComponentGroup Id="PhotocraftFiles" Directory="INSTALLFOLDER">
       <Component Id="PhotocraftApp" Guid="A6DE41B7-A80F-4C59-A17E-BB68065BF67E">
         <File Id="PhotocraftExe" Source="$(var.BinDir)\photocraft.exe" KeyPath="yes">
-          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="PhotoCraft"
-              Description="PhotoCraft image editor" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="PhotoHouse"
+              Description="PhotoHouse image editor" WorkingDirectory="INSTALLFOLDER" Advertise="yes"
               Icon="PhotocraftIcon.exe" IconIndex="0" />
         </File>
 
         <!-- .pcraft: PhotoCraft's own format; PhotoCraft is its default app. -->
-        <ProgId Id="Photocraft.Document" Description="PhotoCraft Document" Icon="PhotocraftExe" IconIndex="0">
+        <ProgId Id="Photocraft.Document" Description="PhotoHouse Document" Icon="PhotocraftExe" IconIndex="0">
           <Extension Id="pcraft" ContentType="application/x-photocraft">
             <Verb Id="open" Command="Open" TargetFile="PhotocraftExe" Argument="&quot;%1&quot;" />
           </Extension>
@@ -121,7 +121,7 @@
         <RegistryValue Root="HKLM" Key="Software\Classes\.ico\OpenWithProgids" Name="Photocraft.Image" Value="" Type="string" />
 
         <!-- "Open with" app list and the Run dialog (Win+R "photocraft"). -->
-        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe" Name="FriendlyAppName" Value="PhotoCraft" Type="string" />
+        <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe" Name="FriendlyAppName" Value="PhotoHouse" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\shell\open\command" Value="&quot;[#PhotocraftExe]&quot; &quot;%1&quot;" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".pcraft" Value="" Type="string" />
         <RegistryValue Root="HKLM" Key="Software\Classes\Applications\photocraft.exe\SupportedTypes" Name=".psd" Value="" Type="string" />
