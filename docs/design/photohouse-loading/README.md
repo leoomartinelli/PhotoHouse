@@ -17,6 +17,7 @@ Com movimento reduzido ativado no sistema, exibe diretamente o estado concluído
 - Fundo preto e destaques verde neon `#BFFE00`, com luz ao redor da janela.
 - Família Roboto; carregamento à esquerda e percentual ajustado à largura da barra.
 - Housinho à direita, com a ilustração inteira e suas proporções preservadas.
+- Janela de proporção 3:2, próxima do estudo inicial, com arte vertical 912 × 1055.
 - Arte encostada no topo, lateral e base, sem margens ou moldura própria.
 - Composição em coluna em janelas estreitas.
 - Textos auxiliares, divisória central e rodapé do primeiro estudo removidos.

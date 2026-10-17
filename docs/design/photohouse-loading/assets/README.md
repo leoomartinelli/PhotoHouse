@@ -1,7 +1,7 @@
 # Housinho — arte provisória
 
 `housinho-base.webp` é uma cópia comprimida, com proporções e composição
-preservadas, da imagem **Mascote Engrenagem em Explosão Colorida.png** fornecida
+preservadas, da imagem **ILLUSTRATOR-JANELA-DE-ABETURA.png** (912 × 1055) fornecida
 pelo solicitante nesta conversa em 17/10/2026 para testar o design da issue #5.
 
 O solicitante autorizou o uso no protótipo e seu versionamento nesta branch/PR.

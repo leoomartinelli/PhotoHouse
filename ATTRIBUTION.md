@@ -10,7 +10,7 @@ next to them.
 
 | Path | Title | Author | Source | License / authorization |
 |---|---|---|---|---|
-| `docs/design/photohouse-loading/assets/housinho-base.webp` | Mascote Engrenagem em Explosão Colorida — loading-screen study | Not specified by user | User attachment, 2026-10-17; compressed copy retaining the original composition | User explicitly supplied the art for the prototype and requested its versioning in the feature branch/PR. No separate public license supplied; see adjacent `assets/README.md`. |
+| `docs/design/photohouse-loading/assets/housinho-base.webp` | ILLUSTRATOR-JANELA-DE-ABETURA — vertical loading-screen study | Not specified by user | User attachment, 2026-10-17, 912 × 1055; compressed copy retaining the original composition | User explicitly supplied the art for the prototype and requested its versioning in the feature branch/PR. No separate public license supplied; see adjacent `assets/README.md`. |
 
 ## Bundled in the app
 
