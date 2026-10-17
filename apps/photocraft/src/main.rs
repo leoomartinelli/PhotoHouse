@@ -171,7 +171,11 @@ fn main() -> eframe::Result {
     // Logged like the editor (panics included); a failure only skips the splash.
     if startup_splash::requested() {
         let _ = logging::install();
-        return startup_splash::run();
+        return match startup_splash::run() {
+            Ok(true) => Ok(()),
+            Ok(false) => std::process::exit(130),
+            Err(error) => Err(error),
+        };
     }
     // First, so the panic hook and every start-up warning are recorded (`logging`).
     let logger = logging::install();
@@ -283,8 +287,8 @@ fn main() -> eframe::Result {
     let prefers_x11 = gpu_startup::read_display_server(services::prefs_file().as_deref()) == photocraft_engine::prefs::LinuxDisplayServer::X11;
     #[cfg(not(target_os = "linux"))]
     let prefers_x11 = false;
-    if control_port.is_none() && !safe_gpu && !prefers_x11 {
-        startup_splash::before_editor();
+    if control_port.is_none() && !safe_gpu && !prefers_x11 && !startup_splash::before_editor() {
+        return Ok(());
     }
 
     let control = if let Some(port) = control_port {

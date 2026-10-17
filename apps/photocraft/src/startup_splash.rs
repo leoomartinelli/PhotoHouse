@@ -1,42 +1,73 @@
-//! PhotoHouse's native startup window: the animated mascot (`photocraft_ui_egui::mascote`) and a counter.
+//! PhotoHouse's native startup window. One clock drives the counter and the Housinho frames.
 //! The editor waits for this short-lived child process; its own viewport is never resized.
-//! Anything that goes wrong here (no GPU, panic, Esc/Alt+F4) only skips the splash: the editor
-//! always opens afterwards. The mascot rasterizes within `max_texture_side` and draws nothing if
-//! that fails.
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use std::time::{Duration, Instant};
 
 use egui::{Align2, Color32, FontFamily, FontId, Rect, Stroke, StrokeKind, Vec2};
 
 const FLAG: &str = "--photohouse-startup-splash";
-const DURATION: Duration = Duration::from_millis(1600);
+const DURATION: Duration = Duration::from_millis(4160);
+const FINAL_HOLD: Duration = Duration::from_millis(200);
+const FRAME_COUNT: usize = 52;
 const GREEN: Color32 = Color32::from_rgb(191, 254, 0);
 const SURFACE: Color32 = Color32::from_rgb(36, 37, 37);
 const INK: Color32 = Color32::from_rgb(241, 242, 237);
+const SHEET: &[u8] = include_bytes!("../../../docs/design/photohouse-loading/assets/housinho-frames.webp");
 
 pub fn requested() -> bool {
     std::env::args_os().any(|arg| arg == FLAG)
 }
 
-/// Runs the splash as a child process and waits for it. Never blocks the editor from opening.
-pub fn before_editor() {
+/// Cancellation exits the entire launch. An unavailable splash never prevents editor recovery.
+pub fn before_editor() -> bool {
     let status = std::env::current_exe().and_then(|exe| std::process::Command::new(exe).arg(FLAG).status());
     match status {
-        Ok(status) if status.success() => log::info!("PhotoHouse startup animation closed; opening editor"),
-        Ok(status) => log::warn!("PhotoHouse startup animation failed ({status}); opening editor without it"),
-        Err(error) => log::warn!("PhotoHouse startup animation could not start ({error}); opening editor without it"),
+        Ok(status) if status.success() => {
+            log::info!("PhotoHouse: startup animation reached 100%; opening editor");
+            true
+        }
+        Ok(status) if status.code() == Some(130) => false,
+        Ok(status) => {
+            log::warn!("PhotoHouse startup window exited with {status}; opening editor in recovery mode");
+            true
+        }
+        Err(error) => {
+            log::warn!("PhotoHouse startup window: {error}; opening editor without the animation");
+            true
+        }
     }
 }
 
 #[derive(Debug, PartialEq)]
 struct Progress {
     percent: u32,
+    frame: usize,
     close: bool,
 }
 
 fn progress(elapsed: Duration) -> Progress {
     let fraction = (elapsed.as_secs_f64() / DURATION.as_secs_f64()).clamp(0.0, 1.0);
-    Progress { percent: if fraction >= 1.0 { 100 } else { (fraction * 100.0).floor() as u32 }, close: elapsed >= DURATION }
+    Progress {
+        percent: if fraction >= 1.0 { 100 } else { (fraction * 100.0).floor() as u32 },
+        frame: if fraction >= 1.0 { FRAME_COUNT - 1 } else { (fraction * (FRAME_COUNT - 1) as f64).floor() as usize },
+        close: elapsed >= DURATION + FINAL_HOLD,
+    }
+}
+
+fn frame_origin(frame: usize) -> [usize; 2] {
+    let frame = frame.min(FRAME_COUNT - 1);
+    [(frame % 8) * 720, (frame / 8) * 832]
+}
+
+fn upload_frame(ctx: &egui::Context, sheet: &egui::ColorImage, frame: usize) -> Result<egui::TextureHandle, std::io::Error> {
+    if sheet.size != [5760, 5824] || ctx.input(|i| i.max_texture_side) < 832 {
+        return Err(std::io::Error::other("PhotoHouse startup frames exceed the available texture size"));
+    }
+    let image = sheet.region_by_pixels(frame_origin(frame), [720, 832]);
+    Ok(ctx.load_texture(format!("photohouse-startup-housinho-{frame}"), image, egui::TextureOptions::LINEAR))
 }
 
 fn native_options() -> eframe::NativeOptions {
@@ -55,7 +86,9 @@ fn native_options() -> eframe::NativeOptions {
     }
 }
 
-pub fn run() -> Result<(), eframe::Error> {
+pub fn run() -> Result<bool, eframe::Error> {
+    let complete = Arc::new(AtomicBool::new(false));
+    let finished = complete.clone();
     let options = native_options();
     eframe::run_native(
         "PhotoHouse — iniciando",
@@ -80,15 +113,26 @@ pub fn run() -> Result<(), eframe::Error> {
                 }
             }
             cc.egui_ctx.set_fonts(fonts);
-            Ok(Box::new(Splash { regular, bold, start: None, capture_requested: [false; 3] }))
+            let image = photocraft_codecs::decode(SHEET).map_err(|error| std::io::Error::other(error.to_string()))?;
+            if image.width() != 5760 || image.height() != 5824 {
+                return Err(std::io::Error::other("invalid PhotoHouse startup animation dimensions").into());
+            }
+            let color = egui::ColorImage::from_rgba_unmultiplied([5760, 5824], &image.to_rgba8());
+            // Preserve every original pixel without uploading the 5760×5824 atlas,
+            // which exceeds egui's default 2048 texture-side limit.
+            let textures = (0..FRAME_COUNT).map(|frame| upload_frame(&cc.egui_ctx, &color, frame)).collect::<Result<Vec<_>, _>>()?;
+            Ok(Box::new(Splash { textures, regular, bold, start: None, finished, capture_requested: [false; 3] }))
         }),
-    )
+    )?;
+    Ok(complete.load(Ordering::Relaxed))
 }
 
 struct Splash {
+    textures: Vec<egui::TextureHandle>,
     regular: FontFamily,
     bold: FontFamily,
     start: Option<Instant>,
+    finished: Arc<AtomicBool>,
     capture_requested: [bool; 3],
 }
 
@@ -98,15 +142,8 @@ impl eframe::App for Splash {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _: &mut eframe::Frame) {
-        self.show(ui);
-    }
-}
-
-impl Splash {
-    fn show(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         self.collect_captures(&ctx);
-        // Esc skips the animation; the editor still opens (as with Alt+F4 / window close).
         if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
             return;
@@ -120,6 +157,7 @@ impl Splash {
         }
         self.request_capture(&ctx, state.percent);
         if state.close {
+            self.finished.store(true, Ordering::Relaxed);
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         } else {
             ctx.request_repaint_after(Duration::from_millis(16));
@@ -134,7 +172,9 @@ impl Splash {
         let split = rect.left() + rect.width() * 0.4237;
         painter.rect_filled(rect, 0.0, SURFACE);
         let art = Rect::from_min_max(egui::pos2(split, rect.top()), rect.max);
-        photocraft_ui_egui::mascote::paint(ui, art.shrink(art.width() * 0.12), egui::Id::new("splash-mascote"));
+        if let Some(texture) = self.textures.get(state.frame) {
+            egui::Image::new((texture.id(), texture.size_vec2())).paint_at(ui, art);
+        }
         // Keep the stroke clear of Windows' rounded outer window clip.
         painter.rect_stroke(rect.shrink(2.0), 14.0, Stroke::new(1.5, GREEN), StrokeKind::Inside);
         let left = rect.left() + 32.0 * scale;
@@ -221,18 +261,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn escape_closes_only_the_splash_before_the_animation_starts() {
-        let ctx = egui::Context::default();
-        let mut splash = Splash { regular: FontFamily::Proportional, bold: FontFamily::Proportional, start: None, capture_requested: [false; 3] };
-        let mut input = egui::RawInput::default();
-        input.events.push(egui::Event::Key { key: egui::Key::Escape, physical_key: None, pressed: true, repeat: false, modifiers: Default::default() });
-        let mut out = ctx.run_ui(input, |ui| splash.show(ui));
-        out.textures_delta.clear();
-        assert!(out.viewport_output.get(&egui::ViewportId::ROOT).is_some_and(|o| o.commands.iter().any(|c| matches!(c, egui::ViewportCommand::Close))));
-        assert!(splash.start.is_none(), "Escape must skip painting and waiting for the animation");
-    }
-
-    #[test]
     fn startup_is_opaque_and_has_no_outer_margin() {
         let options = native_options();
         assert_eq!(options.viewport.transparent, Some(false));
@@ -241,12 +269,39 @@ mod tests {
     }
 
     #[test]
-    fn counter_ends_at_100_and_closes_without_extra_hold() {
-        assert_eq!(progress(Duration::ZERO), Progress { percent: 0, close: false });
-        assert_eq!(progress(Duration::from_millis(800)), Progress { percent: 50, close: false });
-        assert_eq!(progress(Duration::from_millis(1599)), Progress { percent: 99, close: false });
-        assert_eq!(progress(DURATION), Progress { percent: 100, close: true });
-        assert_eq!(progress(Duration::from_secs(u64::MAX)).percent, 100);
-        assert!(DURATION <= Duration::from_secs(2));
+    fn animation_and_counter_share_endpoints_and_hold_final_frame() {
+        assert_eq!(progress(Duration::ZERO), Progress { percent: 0, frame: 0, close: false });
+        assert_eq!(progress(Duration::from_millis(2080)), Progress { percent: 50, frame: 25, close: false });
+        assert_eq!(progress(Duration::from_millis(4159)), Progress { percent: 99, frame: 50, close: false });
+        assert_eq!(progress(DURATION), Progress { percent: 100, frame: 51, close: false });
+        assert_eq!(progress(DURATION + FINAL_HOLD), Progress { percent: 100, frame: 51, close: true });
+        assert_eq!(progress(Duration::from_secs(u64::MAX)).frame, 51);
+    }
+
+    #[test]
+    fn frames_never_reach_an_unused_sprite_cell() {
+        for frame in [0, 25, 51, usize::MAX] {
+            let [x, y] = frame_origin(frame);
+            assert!(x + 720 <= 5760 && y + 832 <= 5824);
+        }
+        assert_eq!(frame_origin(usize::MAX), frame_origin(51));
+    }
+
+    #[test]
+    fn original_frames_upload_with_the_default_2048_texture_limit() {
+        let ctx = egui::Context::default();
+        assert_eq!(ctx.input(|i| i.max_texture_side), 2048);
+        let decoded = photocraft_codecs::decode(SHEET).unwrap();
+        let sheet = egui::ColorImage::from_rgba_unmultiplied([5760, 5824], &decoded.to_rgba8());
+        for frame in [0, 25, 51] {
+            let texture = upload_frame(&ctx, &sheet, frame).unwrap();
+            assert_eq!(texture.size(), [720, 832]);
+        }
+    }
+
+    #[test]
+    fn embedded_sprite_decodes_at_the_expected_dimensions() {
+        let image = photocraft_codecs::decode(SHEET).expect("startup asset decodes");
+        assert_eq!((image.width(), image.height()), (5760, 5824));
     }
 }
