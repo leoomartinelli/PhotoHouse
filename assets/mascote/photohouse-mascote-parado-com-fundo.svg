@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 -150 2264.77 1970.76">
+<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-142.6 -126.2 2550 2041.4">
   <defs>
     <style>
       .cls-1 {
@@ -88,7 +88,7 @@
     <radialGradient id="Gradiente_sem_nome_61-4" data-name="Gradiente sem nome 61" cx="815.87" cy="273.54" fx="815.87" fy="273.54" r="800.91" gradientTransform="translate(0 116.46) scale(1 .98)" xlink:href="#Gradiente_sem_nome_61"/>
     <radialGradient id="Gradiente_sem_nome_61-5" data-name="Gradiente sem nome 61" cx="45.87" cy="501.19" fx="45.87" fy="501.19" r="747.16" gradientTransform="translate(0 116.46) scale(1 .98)" xlink:href="#Gradiente_sem_nome_61"/>
     <clipPath id="recorte-fundo">
-      <rect x="-200" y="-400" width="2664.77" height="1800"/>
+      <rect x="-20000" y="-20000" width="40000" height="21400"/>
       <rect x="180.31" y="0" width="1858.83" height="1820.76" rx="390.56" ry="390.56"/>
     </clipPath>
   </defs>
