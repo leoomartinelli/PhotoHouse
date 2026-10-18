@@ -1,6 +1,6 @@
 # Regras do PhotoHouse
 
-Este projeto é o PhotoHouse, derivado do PhotoCraft. Preserve a identidade PhotoHouse, o tema verde neon #BFFE00, a mascote e o instalador Windows. Os nomes internos dos crates continuam photocraft-*.
+Este projeto é o PhotoHouse, derivado do PhotoCraft. Preserve a identidade PhotoHouse, o tema verde da marca #6FCF68, a mascote e o instalador Windows. Os nomes internos dos crates continuam photocraft-*.
 
 Siga CONTRIBUTING.md e SECURITY.md da House: branch própria, commits e PRs com prefixo FEAT:, FIX:, DOCS: ou CHORE:, PR para main e aprovação do líder. Nunca faça merge, deploy, force-push ou alteração da organização sem OK explícito. Não commite segredos. Execute lint, testes e build antes de commitar. As regras técnicas de origem abaixo continuam aplicáveis; a identidade e o fluxo da House prevalecem.
 

@@ -10,7 +10,7 @@ Leia [AGENTS.md](AGENTS.md), [CONTRIBUTING.md](CONTRIBUTING.md) e
 
 - Marca PhotoHouse em títulos, menus, Sobre, diálogos e traduções; os nomes
   internos dos crates e binários continuam `photocraft-*`.
-- Tema dark (`#141414` a `#282828`) com acento neon lime `#BFFE00`, contraste
+- Tema dark (`#141414` a `#282828`) com acento verde `#6FCF68`, contraste
   legível e uso dos tokens compartilhados da interface.
 - Mascote da tela inicial, ícones da House e respectivas atribuições.
 - Liquid Glass: algoritmo, comandos, prévia, posicionamento no canvas,

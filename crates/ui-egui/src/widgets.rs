@@ -1069,7 +1069,7 @@ pub fn toggle(ui: &mut Ui, on: &mut bool, label: &str) -> Response {
                 ui.painter().rect_filled(rect, 8.5, bg);
             }
             let x = egui::lerp((rect.left() + 8.5)..=(rect.right() - 8.5), how_on);
-            ui.painter().circle_filled(pos2(x, rect.center().y), 6.5, Color32::WHITE);
+            ui.painter().circle_filled(pos2(x, rect.center().y), 6.5, if *on { t.primary_text } else { Color32::WHITE });
             ui.label(egui::RichText::new(tl!(label)).color(if *on { t.text } else { t.text_dim }));
             resp
         })
@@ -1632,7 +1632,7 @@ pub fn check_box_fill(on: bool, pressed: bool, t: &Tokens) -> Color32 {
 }
 
 /// Paint a check box in `rect`: [`check_box_fill`] with a tick in the theme's primary text
-/// colour when `on` (PhotoHouse: dark on the neon accent), else an
+/// colour when `on` (PhotoHouse: dark on the green accent), else an
 /// outline that brightens while `hovered` or `pressed`.
 pub fn check_box(p: &egui::Painter, rect: Rect, on: bool, hovered: bool, pressed: bool, t: &Tokens) {
     p.rect_filled(rect, 2.0, check_box_fill(on, pressed, t));

@@ -1,16 +1,16 @@
 //! Design system: themes, colour tokens, radii, typography.
 //!
-//! - **Studio**: near-black surfaces, rounded cards, Inter + JetBrains Mono, soft violet
-//!   accent. Modelled on the look of modern pro editors (such as Photoshop 2025).
+//! All themes share PhotoHouse's #6FCF68 accent, with darker text derivatives on light surfaces.
+//! - **Studio**: near-black surfaces, rounded cards, Inter + JetBrains Mono.
 //! - **Studio Light**: the same system on light surfaces.
-//! - **Classic**: a deliberately Windows-2000-era look (grey bevels, square corners, navy selection)
+//! - **Classic**: a deliberately Windows-2000-era look (grey bevels and square corners)
 //!   for people who prefer it.
 //! - **Adwaita** (Light and Dark): the Studio layout in GNOME's libadwaita palette, so the app sits
 //!   with the rest of a GNOME desktop.
 //! - **Solarized Dark**: Ethan Schoonover's Solarized palette (base03/base02 surfaces, base0 text,
-//!   Solarized blue accent) with the Studio layout.
+//!   PhotoHouse accent) with the Studio layout.
 //! - **Breeze** (Light and Dark): the Studio layout adapted to the look of KDE Plasma's Breeze
-//!   (blue-grey surfaces, Breeze blue accent, 5 px corners), so the app sits with the rest of a
+//!   (blue-grey surfaces and 5 px corners), so the app sits with the rest of a
 //!   Plasma desktop.
 //!
 //! - **Pro (Light Gray)** and **Pro (Light)**: Photoshop's third and fourth interface brightness
@@ -23,9 +23,16 @@ use photocraft_engine::prefs::UiFontSize;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
+/// PhotoHouse's brand accent, shared by editor controls and the native startup window.
+pub const BRAND_ACCENT: Color32 = Color32::from_rgb(111, 207, 104);
+
+fn brand_tint(alpha: u8) -> Color32 {
+    Color32::from_rgba_unmultiplied(BRAND_ACCENT.r(), BRAND_ACCENT.g(), BRAND_ACCENT.b(), alpha)
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ThemeKind {
-    /// Photoshop-style Spectrum dark: flat charcoal panels, tab strips, blue accents (darkest brightness).
+    /// Photoshop-style Spectrum dark: flat charcoal panels and tab strips (darkest brightness).
     Pro,
     /// Photoshop's default (second) interface brightness: #535353 panels, #282828 canvas (default).
     #[default]
@@ -42,15 +49,15 @@ pub enum ThemeKind {
     /// GNOME's libadwaita dark style.
     AdwaitaDark,
     /// Solarized Dark (Ethan Schoonover's palette): the base03 background, base02 panels and
-    /// base0 body text, with the Solarized blue accent.
+    /// base0 body text, with the PhotoHouse accent.
     SolarizedDark,
     /// An adaptation of KDE Plasma's Breeze Light look.
     BreezeLight,
     /// An adaptation of KDE Plasma's Breeze Dark look.
     BreezeDark,
-    /// A low-contrast dark theme: muted violet-grey surfaces, softened text and a periwinkle accent.
+    /// A low-contrast dark theme: muted violet-grey surfaces and softened text.
     SoftDark,
-    /// A low-contrast light theme: pale violet-grey surfaces, softened dark text and a periwinkle accent.
+    /// A low-contrast light theme: pale violet-grey surfaces and softened dark text.
     SoftLight,
 }
 
@@ -203,8 +210,8 @@ impl Tokens {
     }
 
     pub fn for_kind(kind: ThemeKind) -> Self {
-        match kind {
-            // PhotoHouse default dark theme: off-black/charcoal (#141414..#3A3A3A) with neon lime green (#BFFE00).
+        let mut tokens = match kind {
+            // PhotoHouse default dark theme: off-black/charcoal (#141414..#3A3A3A) with the PhotoHouse green accent (#6FCF68).
             ThemeKind::ProMedium => Tokens {
                 kind,
                 chrome: Color32::from_rgb(28, 28, 28),
@@ -221,7 +228,7 @@ impl Tokens {
                 text_dim: Color32::from_rgb(200, 200, 198),
                 text_faint: Color32::from_rgb(140, 140, 140),
                 icon: Color32::from_rgb(226, 226, 224),
-                accent_soft: Color32::from_rgba_unmultiplied(191, 254, 0, 48),
+                accent_soft: brand_tint(24),
                 separator: Color32::from_rgb(42, 42, 42),
                 tab_strip: Color32::from_rgb(22, 22, 22),
                 row_selected: Color32::from_rgb(48, 52, 36),
@@ -244,8 +251,8 @@ impl Tokens {
                 text_dim: Color32::from_rgb(52, 52, 52),
                 text_faint: Color32::from_rgb(96, 96, 96),
                 icon: Color32::from_rgb(38, 38, 38),
-                accent_soft: Color32::from_rgb(208, 208, 208),
-                accent_text: Color32::from_rgb(52, 72, 0),
+                accent_soft: brand_tint(24),
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(158, 158, 158),
                 shadow: Color32::from_black_alpha(70),
                 tab_strip: Color32::from_rgb(170, 170, 170),
@@ -269,8 +276,8 @@ impl Tokens {
                 text_dim: Color32::from_rgb(64, 64, 64),
                 text_faint: Color32::from_rgb(120, 120, 120),
                 icon: Color32::from_rgb(46, 46, 46),
-                accent_soft: Color32::from_rgb(214, 214, 214),
-                accent_text: Color32::from_rgb(68, 92, 0),
+                accent_soft: brand_tint(24),
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(214, 214, 214),
                 shadow: Color32::from_black_alpha(50),
                 tab_strip: Color32::from_rgb(226, 226, 226),
@@ -293,14 +300,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(190, 190, 190),
                 text_faint: Color32::from_rgb(130, 130, 130),
                 icon: Color32::from_rgb(218, 218, 218),
-                accent: Color32::from_rgb(191, 254, 0),
-                accent_soft: Color32::from_rgba_unmultiplied(191, 254, 0, 48),
-                accent_border: Color32::from_rgb(191, 254, 0),
-                accent_text: Color32::from_rgb(191, 254, 0),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(38, 38, 38),
                 shadow: Color32::from_black_alpha(150),
-                primary_bg: Color32::from_rgb(191, 254, 0),
-                primary_text: Color32::from_rgb(20, 20, 20),
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(236, 91, 98),
                 warning: Color32::from_rgb(232, 176, 70),
                 radius_sm: 3.0,
@@ -333,14 +340,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(156, 156, 156),
                 text_faint: Color32::from_rgb(107, 107, 107),
                 icon: Color32::from_rgb(204, 204, 204),
-                accent: Color32::from_rgb(191, 254, 0),
-                accent_soft: Color32::from_rgba_unmultiplied(191, 254, 0, 46),
-                accent_border: Color32::from_rgba_unmultiplied(191, 254, 0, 150),
-                accent_text: Color32::from_rgb(191, 254, 0),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(38, 38, 38),
                 shadow: Color32::from_black_alpha(140),
-                primary_bg: Color32::from_rgb(191, 254, 0),
-                primary_text: Color32::from_rgb(20, 20, 20),
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(240, 96, 96),
                 warning: Color32::from_rgb(240, 190, 90),
                 radius_sm: 6.0,
@@ -373,14 +380,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(96, 96, 106),
                 text_faint: Color32::from_rgb(150, 150, 160),
                 icon: Color32::from_rgb(60, 60, 68),
-                accent: Color32::from_rgb(108, 92, 231),
-                accent_soft: Color32::from_rgba_unmultiplied(108, 92, 231, 36),
-                accent_border: Color32::from_rgba_unmultiplied(108, 92, 231, 120),
-                accent_text: Color32::from_rgb(80, 64, 200),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(226, 226, 232),
                 shadow: Color32::from_black_alpha(50),
-                primary_bg: Color32::from_rgb(20, 20, 24),
-                primary_text: Color32::from_rgb(250, 250, 252),
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(210, 60, 60),
                 warning: Color32::from_rgb(190, 130, 20),
                 radius_sm: 6.0,
@@ -413,14 +420,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(64, 64, 64),
                 text_faint: Color32::from_rgb(128, 128, 128),
                 icon: Color32::BLACK,
-                accent: Color32::from_rgb(10, 36, 106),
-                accent_soft: Color32::from_rgb(10, 36, 106),
-                accent_border: Color32::from_rgb(10, 36, 106),
-                accent_text: Color32::WHITE,
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(128, 128, 128),
                 shadow: Color32::from_black_alpha(0),
-                primary_bg: Color32::from_rgb(212, 208, 200),
-                primary_text: Color32::BLACK,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(160, 0, 0),
                 warning: Color32::from_rgb(128, 96, 0),
                 radius_sm: 0.0,
@@ -456,14 +463,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(100, 100, 104),
                 text_faint: Color32::from_rgb(155, 155, 160),
                 icon: Color32::from_rgb(56, 56, 60),
-                accent: Color32::from_rgb(53, 132, 228),
-                accent_soft: Color32::from_rgba_unmultiplied(53, 132, 228, 40),
-                accent_border: Color32::from_rgba_unmultiplied(53, 132, 228, 130),
-                accent_text: Color32::from_rgb(28, 113, 216),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(222, 222, 225),
                 shadow: Color32::from_black_alpha(45),
-                primary_bg: Color32::from_rgb(53, 132, 228),
-                primary_text: Color32::WHITE,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(192, 28, 40),
                 warning: Color32::from_rgb(156, 110, 3),
                 radius_sm: 6.0,
@@ -496,14 +503,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(192, 192, 194),
                 text_faint: Color32::from_rgb(145, 145, 148),
                 icon: Color32::from_rgb(235, 235, 237),
-                accent: Color32::from_rgb(53, 132, 228),
-                accent_soft: Color32::from_rgba_unmultiplied(53, 132, 228, 60),
-                accent_border: Color32::from_rgba_unmultiplied(120, 174, 237, 140),
-                accent_text: Color32::from_rgb(120, 174, 237),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(24, 24, 27),
                 shadow: Color32::from_black_alpha(140),
-                primary_bg: Color32::from_rgb(53, 132, 228),
-                primary_text: Color32::WHITE,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(255, 123, 99),
                 warning: Color32::from_rgb(248, 228, 92),
                 radius_sm: 6.0,
@@ -542,14 +549,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(54, 63, 72),
                 text_faint: Color32::from_rgb(81, 90, 100),
                 icon: Color32::from_rgb(52, 58, 64),
-                accent: Color32::from_rgb(58, 172, 232),
-                accent_soft: Color32::from_rgba_unmultiplied(58, 172, 232, 48),
-                accent_border: Color32::from_rgba_unmultiplied(58, 172, 232, 170),
-                accent_text: Color32::from_rgb(30, 94, 136),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(214, 218, 222),
                 shadow: Color32::from_black_alpha(45),
-                primary_bg: Color32::from_rgb(35, 122, 180),
-                primary_text: Color32::WHITE,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(170, 50, 64),
                 warning: Color32::from_rgb(153, 72, 0),
                 radius_sm: 5.0,
@@ -592,14 +599,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(200, 206, 213),
                 text_faint: Color32::from_rgb(164, 170, 177),
                 icon: Color32::from_rgb(236, 238, 240),
-                accent: Color32::from_rgb(58, 172, 232),
-                accent_soft: Color32::from_rgba_unmultiplied(58, 172, 232, 40),
-                accent_border: Color32::from_rgba_unmultiplied(58, 172, 232, 160),
-                accent_text: Color32::from_rgb(80, 184, 238),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(46, 50, 54),
                 shadow: Color32::from_black_alpha(150),
-                primary_bg: Color32::from_rgb(30, 118, 176),
-                primary_text: Color32::WHITE,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(227, 111, 123),
                 warning: Color32::from_rgb(244, 120, 6),
                 radius_sm: 5.0,
@@ -635,14 +642,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(212, 212, 224),
                 text_faint: Color32::from_rgb(190, 190, 206),
                 icon: Color32::from_rgb(214, 214, 226),
-                accent: Color32::from_rgb(138, 154, 232),
-                accent_soft: Color32::from_rgba_unmultiplied(138, 154, 232, 48),
-                accent_border: Color32::from_rgba_unmultiplied(138, 154, 232, 150),
-                accent_text: Color32::from_rgb(190, 200, 252),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(36, 36, 44),
                 shadow: Color32::from_black_alpha(110),
-                primary_bg: Color32::from_rgb(86, 104, 196),
-                primary_text: Color32::WHITE,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(250, 160, 172),
                 warning: Color32::from_rgb(240, 200, 130),
                 radius_sm: 7.0,
@@ -677,14 +684,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(62, 60, 76),
                 text_faint: Color32::from_rgb(80, 78, 96),
                 icon: Color32::from_rgb(64, 62, 80),
-                accent: Color32::from_rgb(110, 128, 216),
-                accent_soft: Color32::from_rgba_unmultiplied(110, 128, 216, 44),
-                accent_border: Color32::from_rgba_unmultiplied(110, 128, 216, 170),
-                accent_text: Color32::from_rgb(46, 58, 146),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(210, 207, 218),
                 shadow: Color32::from_black_alpha(40),
-                primary_bg: Color32::from_rgb(80, 98, 190),
-                primary_text: Color32::WHITE,
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(166, 44, 62),
                 warning: Color32::from_rgb(140, 72, 0),
                 radius_sm: 7.0,
@@ -720,14 +727,14 @@ impl Tokens {
                 text_dim: Color32::from_rgb(101, 123, 131),
                 text_faint: Color32::from_rgb(88, 110, 117),
                 icon: Color32::from_rgb(147, 161, 161),
-                accent: Color32::from_rgb(38, 139, 210),
-                accent_soft: Color32::from_rgba_unmultiplied(38, 139, 210, 46),
-                accent_border: Color32::from_rgba_unmultiplied(38, 139, 210, 120),
-                accent_text: Color32::from_rgb(253, 246, 227),
+                accent: BRAND_ACCENT,
+                accent_soft: brand_tint(24),
+                accent_border: BRAND_ACCENT,
+                accent_text: BRAND_ACCENT,
                 separator: Color32::from_rgb(0, 37, 47),
                 shadow: Color32::from_black_alpha(150),
-                primary_bg: Color32::from_rgb(38, 139, 210),
-                primary_text: Color32::from_rgb(253, 246, 227),
+                primary_bg: BRAND_ACCENT,
+                primary_text: Color32::from_gray(20),
                 danger: Color32::from_rgb(220, 50, 47),
                 warning: Color32::from_rgb(181, 137, 0),
                 radius_sm: 6.0,
@@ -744,7 +751,27 @@ impl Tokens {
                 caption_close_text: Color32::from_rgb(253, 246, 227),
                 scrim: Color32::from_black_alpha(110),
             },
-        }
+        };
+        // Surface palettes remain theme-specific; brand highlights share one base hue.
+        // Light surfaces need a darker derivative for readable links and active-tool glyphs.
+        tokens.accent_text = if kind == ThemeKind::SoftDark {
+            BRAND_ACCENT.lerp_to_gamma(Color32::WHITE, 0.14)
+        } else if tokens.dark() {
+            BRAND_ACCENT
+        } else {
+            BRAND_ACCENT.lerp_to_gamma(Color32::BLACK, 0.60)
+        };
+        tokens.accent_border = tokens.accent_text;
+        let alpha = if kind == ThemeKind::SoftDark {
+            12
+        } else if tokens.dark() {
+            24
+        } else {
+            32
+        };
+        tokens.accent_soft = brand_tint(alpha);
+        tokens.row_selected = tokens.card.lerp_to_gamma(BRAND_ACCENT, f32::from(alpha) / 255.0);
+        tokens
     }
 
     /// Tokens for the active theme (stored in egui's context data by [`apply`]).
@@ -987,7 +1014,7 @@ pub fn apply(ctx: &egui::Context, kind: ThemeKind) {
     v.faint_bg_color = t.card;
     v.code_bg_color = t.field;
     v.override_text_color = Some(t.text);
-    v.hyperlink_color = t.accent;
+    v.hyperlink_color = t.accent_text;
     v.warn_fg_color = t.warning;
     v.error_fg_color = t.danger;
     v.window_corner_radius = CornerRadius::same(t.radius_lg as u8);
@@ -1264,6 +1291,27 @@ mod tests {
     }
 
     #[test]
+    fn photohouse_accent_is_consistent_and_control_states_remain_legible() {
+        for kind in ThemeKind::ALL {
+            let t = Tokens::for_kind(kind);
+            assert_eq!(t.accent, Color32::from_rgb(0x6f, 0xcf, 0x68), "{kind:?}");
+            assert_eq!(t.primary_bg, t.accent, "{kind:?}");
+            assert_ne!(t.accent_soft, t.accent, "selected tool fill must remain translucent");
+            assert!(t.accent_soft.a() > 0 && t.accent_soft.a() < 64, "{kind:?}");
+            // Filled buttons and checked controls use dark text even on light themes.
+            for factor in [1.0, 0.93, 0.85, 0.75] {
+                assert!(contrast(t.primary_text, t.primary_bg.gamma_multiply(factor)) >= 4.5, "{kind:?}: primary/checked label at {factor}");
+            }
+            // Active-tool glyphs and focus outlines must stand out on every UI surface.
+            for surface in [t.chrome, t.card, t.dock, t.field, t.hover, t.pressed, t.row_selected] {
+                assert!(contrast(t.accent_text, surface) >= 3.0, "{kind:?}: active tool on {surface:?}");
+            }
+            // Green document labels retain their semantic hue rather than becoming brand accents.
+            assert_eq!(t.layer_label_colors(photocraft_doc::LabelColor::Green).unwrap().0, Color32::from_rgb(0x85, 0xdc, 0x6a));
+        }
+    }
+
+    #[test]
     fn adwaita_themes_parse_and_meet_text_contrast() {
         for kind in [ThemeKind::Adwaita, ThemeKind::AdwaitaDark] {
             assert_eq!(ThemeKind::from_name(kind.id()), Some(kind));
@@ -1336,10 +1384,10 @@ mod tests {
             assert!(!t.pro && !t.bevel, "{kind:?} uses the Studio layout");
             // The design intent, not exact values (the palette is an adaptation and may be tuned):
             // the canvas is the most recessed surface, then the dock and the cards, and controls
-            // sit above the cards they are on; the accent is a blue.
+            // sit above the cards they are on; the accent follows PhotoHouse branding.
             let lum = |c: Color32| u32::from(c.r()) + u32::from(c.g()) + u32::from(c.b());
             assert!(lum(t.canvas) < lum(t.dock) && lum(t.dock) < lum(t.card) && lum(t.card) < lum(t.field), "{kind:?}: surface order");
-            assert!(t.accent.b() > t.accent.g() && t.accent.g() > t.accent.r(), "blue accent: {:?}", t.accent);
+            assert_eq!(t.accent, BRAND_ACCENT, "PhotoHouse accent in {kind:?}");
             // Plasma's surfaces are cool blue-greys: dark ones stay below 64 per channel and light
             // ones above 205, all with a little more blue than red (our own values, close to it).
             for c in [t.chrome, t.canvas, t.dock, t.card, t.field] {

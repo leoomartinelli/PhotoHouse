@@ -44,7 +44,7 @@ pub fn discord_button(app: &mut PhotocraftApp, ui: &mut egui::Ui, min_width: f32
 /// The "PhotoHouse website" link on its own (the start screen), centred in a vertical layout.
 pub fn site_link(app: &mut PhotocraftApp, ui: &mut egui::Ui) {
     let t = crate::theme::Tokens::get(ui.ctx());
-    let label = egui::RichText::new(tl!("PhotoHouse website")).font(egui::FontId::proportional(12.5)).color(t.accent);
+    let label = egui::RichText::new(tl!("PhotoHouse website")).font(egui::FontId::proportional(12.5)).color(t.accent_text);
     if ui.link(label).on_hover_text(APP_PAGE).clicked() {
         open(app, ui.ctx(), APP_PAGE);
     }
