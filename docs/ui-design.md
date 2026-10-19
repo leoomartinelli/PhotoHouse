@@ -2,22 +2,41 @@
 
 ## Themes
 
+PhotoHouse uses **#6FCF68** (RGB 111, 207, 104) as the brand accent in every theme
+(issue #22). `theme::BRAND_ACCENT` is the source for editor controls and the native
+startup window. Surface colours remain theme-specific; document pixels, swatches,
+layer labels, error/warning/success and analysis colours keep their semantic hues.
+Primary buttons, checked controls and active switch indicators use dark foregrounds
+on the base green. Hover and
+pressed button fills use 0.93 and 0.85 of that base. Selected-tool backgrounds use
+a translucent green (24/255 alpha on dark themes, 32/255 on light themes and
+12/255 on Soft Dark). Links, active-tool glyphs and focus borders use the base on
+dark surfaces (slightly lightened on Soft Dark) and a darker derivative on light
+surfaces for readable contrast. Pro Light Gray uses a deeper derivative so small
+links also reach 4.5:1 on its dock and canvas. Keyboard focus rings and drop
+indicators use `accent_border`, rather than the raw brand colour.
+Selected rows blend that same tint over their panel surface; Solarized Dark uses
+a recessed dock tint to keep base0 text above 4.5:1 in the selected row. Tests
+cover button labels (4.5:1), active-tool/focus outlines (3:1) across all 14 palettes,
+small links in Pro Light Gray, and Solarized Dark selection text.
+
+
 | Theme | Intent |
 |---|---|
-| Pro | Photoshop-style Spectrum dark: flat charcoal panels (#323232), dark tab strips, Spectrum blue accent (#378ef0), pill buttons, checkboxes, compact 12 px type |
+| Pro | Photoshop-style Spectrum dark: flat charcoal panels (#323232), dark tab strips, PhotoHouse green accent, pill buttons, checkboxes, compact 12 px type |
 | Pro Medium | Photoshop-style medium-gray panels and a dark canvas |
-| Studio | Dark studio style: near-black, rounded cards, pill tabs, violet accent, toggles |
+| Studio | Dark studio style: near-black, rounded cards, pill tabs, PhotoHouse green accent, toggles |
 | Studio Light | Studio on light surfaces |
-| Classic | Windows-2000 bevels, square corners, navy selection |
-| Adwaita | GNOME's libadwaita light palette on the Studio layout: white header bar and cards on a grey sidebar, GNOME blue accent (#3584e4), 6 / 9 / 12 px radii, grey (not red) close button |
+| Classic | Windows-2000 bevels, square corners, green selection |
+| Adwaita | GNOME's libadwaita light palette on the Studio layout: white header bar and cards on a grey sidebar, PhotoHouse green accent, 6 / 9 / 12 px radii, grey (not red) close button |
 | Adwaita Dark | The libadwaita dark palette on the same layout |
-| Solarized Dark | Ethan Schoonover's Solarized palette: base03 canvas, base02 panels, base0 text, Solarized blue accent |
-| Breeze Light | An adaptation of KDE Plasma's Breeze Light on the Studio layout: cool light blue-grey surfaces a few levels from Breeze's so the app blends into a Plasma desktop, Breeze-style blue accent, 5 px radii, red close button on hover; text and status colours are darker than Breeze's for contrast |
-| Breeze Dark | The same for Breeze Dark: cool dark blue-grey surfaces (darkest canvas, then dock, cards, chrome and controls) near Breeze's, blue accent, 5 px radii; secondary text and status colours are lighter than Breeze's for contrast |
-| Soft Dark | Low-contrast dark on the Studio layout: muted violet-grey surfaces (never near-black), softened off-white text, periwinkle accent, generous 7/10/14 px radii; text still holds 4.5:1 on every surface (`theme.rs` tests) |
-| Soft Light | The light counterpart: pale violet-grey surfaces, softened dark-violet text instead of black, periwinkle accent, the same radii |
+| Solarized Dark | Ethan Schoonover's Solarized palette: base03 canvas, base02 panels, base0 text, PhotoHouse green accent |
+| Breeze Light | An adaptation of KDE Plasma's Breeze Light on the Studio layout: cool light blue-grey surfaces a few levels from Breeze's so the app blends into a Plasma desktop, PhotoHouse green accent, 5 px radii, red close button on hover; text and status colours are darker than Breeze's for contrast |
+| Breeze Dark | The same for Breeze Dark: cool dark blue-grey surfaces (darkest canvas, then dock, cards, chrome and controls) near Breeze's, PhotoHouse green accent, 5 px radii; secondary text and status colours are lighter than Breeze's for contrast |
+| Soft Dark | Low-contrast dark on the Studio layout: muted violet-grey surfaces (never near-black), softened off-white text, PhotoHouse green accent, generous 7/10/14 px radii; text still holds 4.5:1 on every surface (`theme.rs` tests) |
+| Soft Light | The light counterpart: pale violet-grey surfaces, softened dark-violet text instead of black, PhotoHouse green accent, the same radii |
 
-Both Breeze themes are our own values close to Plasma's (not a copy of its colour schemes) and put text readability first: every text colour holds 4.5:1 on every surface and on hovered, pressed and selected states (`theme.rs` tests), so their secondary text, accent and status colours are darker (Light) or lighter (Dark) than Breeze's own, and the primary button is a deeper blue with white text.
+Both Breeze themes are our own values close to Plasma's (not a copy of its colour schemes) and put text readability first: every text colour holds 4.5:1 on every surface and on hovered, pressed and selected states (`theme.rs` tests), so their secondary text, accent and status colours are darker (Light) or lighter (Dark) than Breeze's own, and the primary button uses PhotoHouse green with dark text.
 
 Edit → Preferences → Interface shows an Appearance Mode selector (Sync with system, Dark, Light) above separate light and dark theme cards with PhotoCraft editor previews and radio choices. Auto is opt-in and follows the operating system while the app is running. On Linux it reads the desktop portal once and then listens for its `SettingChanged` signal (no polling, and the UI repaints only when the value changes); `gsettings` runs at most once at start-up, by absolute path, when the portal gives no answer. A missing system appearance falls back to Dark. New installs keep Photoshop's default: Dark mode with Pro Medium (Pro Light is the saved light theme). Existing saved single-theme preferences migrate to a fixed Dark or Light mode with their chosen theme. The header appearance button cycles Auto → Light → Dark; its icon shows a monitor, moon or sun for the selected mode. Window → Theme and `ui.set {"theme":"classic"}` select a theme and fix the mode to its light or dark family.
 

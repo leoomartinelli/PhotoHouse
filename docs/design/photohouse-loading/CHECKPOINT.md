@@ -1,5 +1,9 @@
 # Checkpoint da tela de carregamento aprovada
 
+> Registro histórico: as cores abaixo descrevem o commit aprovado naquela data.
+> A interface atual usa #6FCF68, conforme a issue #22; ao recuperar este checkpoint,
+> reaplique o token `theme::BRAND_ACCENT` para manter a cor atual.
+
 Este checkpoint preserva exatamente a tela do commit `005c3a9d`, aprovada na conversa:
 Housinho colorido, fundo #242525, Roboto, contorno verde #BFFE00 de 1,5 ponto
 recuado 2 pontos, cantos de 14 pontos, animação e contagem sincronizadas de 4,16s,

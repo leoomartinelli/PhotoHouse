@@ -137,5 +137,6 @@ Files copied into `corpus/` by hand (tiff, exr, raw) must be MIT, BSD or CC0.
 
 | Path | Title | Author | Source | License |
 | --- | --- | --- | --- | --- |
+| `docs/design/cores-6fcf68/*.png`, `docs/design/cores-6fcf68/before/*.png`, `docs/design/cores-6fcf68/after/*.png`, `docs/design/cores-6fcf68/review/*.png` | Comparação da paleta #6FCF68, issue #22 | PhotoHouse contributors | Capturas locais de QA de 2026-10-18, documento sintético e configuração isolada | MIT OR Apache-2.0; marcas e materiais da interface mantêm suas condições de origem; licenças e detalhes no README adjacente |
 | `docs/images/photohouse-liquid-glass.png` | Liquid Glass em objeto inteligente | PhotoHouse contributors | Captura local de QA de 2026-10-13, documento sintético de formas e cores | MIT OR Apache-2.0; materiais de terceiros da interface mantêm suas licenças acima |
 | `docs/design/pr-8-validacao/*.png`, `docs/design/pr-8-validacao/mascote.mp4` | Abertura e tela inicial com mascote animado | PhotoHouse contributors | Capturas locais de QA de 2026-10-17, configuração isolada sem documentos pessoais | MIT OR Apache-2.0; marcas e materiais da interface mantêm as condições de suas fontes; detalhes no README adjacente |

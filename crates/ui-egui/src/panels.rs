@@ -2615,7 +2615,7 @@ pub(crate) fn dropped_on(ui: &egui::Ui, button: &egui::Response) -> bool {
         return false;
     }
     let t = Tokens::get(ui.ctx());
-    ui.painter().rect_stroke(button.rect, t.radius_sm, Stroke::new(2.0, t.accent), StrokeKind::Inside);
+    ui.painter().rect_stroke(button.rect, t.radius_sm, Stroke::new(2.0, t.accent_border), StrokeKind::Inside);
     ui.ctx().input(|i| i.pointer.any_released())
 }
 
@@ -3867,9 +3867,9 @@ fn layer_drag_and_drop(
             let position = if (p.y - rect.top()) / rect.height() < 0.5 { "above" } else { "below" };
             let painter = ui.painter();
             if position == "above" {
-                painter.line_segment([rect.left_top(), rect.right_top()], Stroke::new(2.0, t.accent));
+                painter.line_segment([rect.left_top(), rect.right_top()], Stroke::new(2.0, t.accent_border));
             } else {
-                painter.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(2.0, t.accent));
+                painter.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(2.0, t.accent_border));
             }
             if released {
                 let mut payload = layer_drop_payload(dragged, l.id, position, &selected);
@@ -3901,13 +3901,13 @@ fn layer_drag_and_drop(
     let painter = ui.painter();
     match position {
         "into" => {
-            painter.rect_stroke(rect.shrink(1.0), t.radius_sm, Stroke::new(2.0, t.accent), StrokeKind::Inside);
+            painter.rect_stroke(rect.shrink(1.0), t.radius_sm, Stroke::new(2.0, t.accent_border), StrokeKind::Inside);
         }
         "above" => {
-            painter.line_segment([rect.left_top(), rect.right_top()], Stroke::new(2.0, t.accent));
+            painter.line_segment([rect.left_top(), rect.right_top()], Stroke::new(2.0, t.accent_border));
         }
         _ => {
-            painter.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(2.0, t.accent));
+            painter.line_segment([rect.left_bottom(), rect.right_bottom()], Stroke::new(2.0, t.accent_border));
         }
     }
     if released {
@@ -3942,7 +3942,7 @@ fn layer_drop_zone(
     }
     let t = Tokens::get(ctx);
     let line = if position == "above" { [target.1.left_top(), target.1.right_top()] } else { [target.1.left_bottom(), target.1.right_bottom()] };
-    ui.painter().line_segment(line, Stroke::new(2.0, t.accent));
+    ui.painter().line_segment(line, Stroke::new(2.0, t.accent_border));
     if ctx.input(|i| i.pointer.any_released()) {
         let mut payload = layer_drop_payload(dragged, target.0, position, &selected);
         if ctx.input(|i| i.modifiers.alt)
@@ -4024,7 +4024,7 @@ fn fx_drop(ctx: &egui::Context, ui: &egui::Ui, l: &Layer, rect: Rect, actions: &
         return;
     }
     let t = Tokens::get(ctx);
-    ui.painter().rect_stroke(rect.shrink(1.0), t.radius_sm, Stroke::new(2.0, t.accent), StrokeKind::Inside);
+    ui.painter().rect_stroke(rect.shrink(1.0), t.radius_sm, Stroke::new(2.0, t.accent_border), StrokeKind::Inside);
     if ctx.input(|i| i.pointer.any_released()) {
         actions.push(fx_drop_action(from, effect, l.id, ctx.input(|i| i.modifiers.alt)));
     }

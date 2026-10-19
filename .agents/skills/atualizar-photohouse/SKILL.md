@@ -1,6 +1,6 @@
 ---
 name: atualizar-photohouse
-description: Sincroniza o PhotoHouse com uma versão do PhotoCraft upstream, preservando identidade House, tema neon, mascote, Liquid Glass, traduções e instalador Windows. Use quando o usuário pedir atualização ou nova sincronização do PhotoHouse.
+description: Sincroniza o PhotoHouse com uma versão do PhotoCraft upstream, preservando identidade House, tema verde PhotoHouse, mascote, Liquid Glass, traduções e instalador Windows. Use quando o usuário pedir atualização ou nova sincronização do PhotoHouse.
 ---
 
 # Atualizar o PhotoHouse
@@ -73,7 +73,7 @@ do upstream e adapte-a aos padrões House; não aceite arquivos inteiros com
 | Área | Referências e comportamento a preservar |
 | --- | --- |
 | Marca | `apps/photocraft`, `brand.rs`, títulos, menus, Sobre, ícones e mascote em `assets/` |
-| Tema | `crates/ui-egui/src/theme.rs` e `widgets.rs`; dark #141414–#282828, acento #BFFE00 e texto/ícones legíveis |
+| Tema | `crates/ui-egui/src/theme.rs` e `widgets.rs`; dark #141414–#282828, acento #6FCF68 e texto/ícones legíveis |
 | Liquid Glass | `crates/algo/src/liquid_glass.rs` e registro em `lib.rs`; comandos em `filters.rs`, `filters_ext.rs`, `smart_cmds.rs` e menus |
 | Edição do efeito | `liquid_glass_ui.rs`, `filter_dialog.rs`, `filter_preview_ui.rs` e canvas; aplicar, editar, mover, cancelar, prévia e Undo/Redo |
 | Documento | Smart Objects/Filters, silhueta vetorial, camadas inferiores, atualização do fundo e persistência das propriedades suportadas |

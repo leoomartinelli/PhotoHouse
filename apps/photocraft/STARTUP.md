@@ -6,7 +6,7 @@ interna `--photohouse-startup-splash`; o processo principal espera sua conclusã
 Assim, o tamanho, a posição e a persistência do editor não recebem a geometria
 da abertura. Não há navegador, HTML ou dependência nova em tempo de execução.
 
-A janela usa o modo escuro aprovado: fundo `#242525`, acentos `#BFFE00`,
+A janela usa o modo escuro aprovado: fundo `#242525`, acentos `#6FCF68`,
 proporção 3:2, assinatura e versão obtida de `CARGO_PKG_VERSION`. Uma textura
 compartilhada com o estudo visual fornece os 52 quadros de alta resolução.
 Cada quadro original é enviado separadamente à GPU em 720 × 832, evitando que
@@ -15,7 +15,7 @@ O relógio de 4,16 segundos controla percentual e quadro; ao atingir 100%, o
 quadro final permanece parado por 200 ms, a abertura fecha e o editor inicia.
 Este percentual descreve a animação de abertura, não a medição das tarefas do editor.
 
-A janela é opaca, com contorno verde `#BFFE00` de 1,5 ponto, recuado 2 pontos
+A janela é opaca, com contorno verde `#6FCF68` de 1,5 ponto, recuado 2 pontos
 para dentro e com cantos de 14 pontos, evitando o recorte externo do Windows.
 Não há brilho ou margem externa. O conteúdo ocupa
 toda a área de 720 × 480 pontos, com fundo escuro até as bordas e a arte à direita.

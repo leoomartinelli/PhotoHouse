@@ -20,8 +20,8 @@ As duas usam a mesma linha de tempo; alternar a versão mantém o progresso atua
 ## Direção atual
 
 - Duas versões: preto com texto claro e verde claro `#DDFDE6` com texto preto.
-- No modo claro, a escrita antes neon e a barra usam `#1C7E67`.
-- A luz e a borda externas continuam verde neon `#BFFE00` nas duas versões.
+- No modo claro, a escrita antes neon e a barra usam `#2C532A`.
+- A luz e a borda externas continuam verde da marca `#6FCF68` nas duas versões.
 - Rodapé em ambas: **The House** Studio, com apenas “The House” em negrito,
   seguido de “Versão 0.8.2”, conforme `workspace.package.version` em `Cargo.toml`.
 - Família Roboto; carregamento à esquerda e percentual ajustado à largura da barra.

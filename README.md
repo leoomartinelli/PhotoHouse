@@ -4,7 +4,7 @@ Editor de imagens da House de Criatividade, desenvolvido em Rust a partir do
 [PhotoCraft](https://github.com/storytold/photocraft).
 Nossa missão: **creative minds for the kingdom**.
 
-Tema escuro com verde neon `#BFFE00`, mascote na tela inicial, instalador offline
+Tema escuro com verde da marca `#6FCF68`, mascote na tela inicial, instalador offline
 para Windows e integração do efeito Liquid Glass com filtros inteligentes.
 O projeto está em desenvolvimento; consulte as limitações em [docs/gaps.md](docs/gaps.md).
 

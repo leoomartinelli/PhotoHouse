@@ -21,7 +21,7 @@ ao pacote anterior. Evidências atuais: `dist/build-manifest-0.8.2-liquid-glass.
 `dist/payload-verification.json` e `dist/installer-preview-0.8.2.png`.
 
 Ao abrir, mostra o GIF original, a frase “Quase lá, estou instalando o seu app!”
-em Segoe UI (com fallback embutido) e uma barra animada verde `#BFFE00`. A barra é
+em Segoe UI (com fallback embutido) e uma barra animada verde `#6FCF68`. A barra é
 indeterminada durante a transação do Windows Installer; não inventa porcentagens.
 Só mostra conclusão após sucesso do MSI. Código 3010 pede reinicialização sem
 reiniciar automaticamente. O app só abre quando a pessoa clica em “Abrir PhotoHouse”.

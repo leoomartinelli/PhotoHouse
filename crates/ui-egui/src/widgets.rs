@@ -37,7 +37,7 @@ pub fn style_spectrum_popup_menu(ui: &mut Ui) {
 /// An accent insertion line on one edge of `r` while a drag hovers it (vertical: on its left or,
 /// `after`, right edge; else on its top or bottom).
 pub fn drop_line(ui: &Ui, r: Rect, after: bool, vertical: bool, t: &Tokens) {
-    let s = Stroke::new(2.0, t.accent);
+    let s = Stroke::new(2.0, t.accent_border);
     if vertical {
         let x = if after { r.right() } else { r.left() };
         ui.painter().line_segment([pos2(x, r.top() + 2.0), pos2(x, r.bottom() - 2.0)], s);
@@ -1069,7 +1069,7 @@ pub fn toggle(ui: &mut Ui, on: &mut bool, label: &str) -> Response {
                 ui.painter().rect_filled(rect, 8.5, bg);
             }
             let x = egui::lerp((rect.left() + 8.5)..=(rect.right() - 8.5), how_on);
-            ui.painter().circle_filled(pos2(x, rect.center().y), 6.5, Color32::WHITE);
+            ui.painter().circle_filled(pos2(x, rect.center().y), 6.5, if *on { t.primary_text } else { Color32::WHITE });
             ui.label(egui::RichText::new(tl!(label)).color(if *on { t.text } else { t.text_dim }));
             resp
         })
@@ -1207,7 +1207,7 @@ fn button_impl_h(ui: &mut Ui, label: &str, min_width: f32, height: Option<f32>, 
     if resp.has_focus() {
         // Keyboard focus (Tab); clicks don't focus egui buttons.
         let r = if t.pro { h / 2.0 } else { t.radius_sm } + 2.0;
-        ui.painter().rect_stroke(rect.expand(2.0), r, Stroke::new(2.0, t.accent), StrokeKind::Outside);
+        ui.painter().rect_stroke(rect.expand(2.0), r, Stroke::new(2.0, t.accent_border), StrokeKind::Outside);
     }
     if t.pro {
         // Spectrum buttons: fully rounded; primary = filled accent, secondary = outline.
@@ -1632,7 +1632,7 @@ pub fn check_box_fill(on: bool, pressed: bool, t: &Tokens) -> Color32 {
 }
 
 /// Paint a check box in `rect`: [`check_box_fill`] with a tick in the theme's primary text
-/// colour when `on` (PhotoHouse: dark on the neon accent), else an
+/// colour when `on` (PhotoHouse: dark on the green accent), else an
 /// outline that brightens while `hovered` or `pressed`.
 pub fn check_box(p: &egui::Painter, rect: Rect, on: bool, hovered: bool, pressed: bool, t: &Tokens) {
     p.rect_filled(rect, 2.0, check_box_fill(on, pressed, t));
