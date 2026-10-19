@@ -12,9 +12,13 @@ pressed button fills use 0.93 and 0.85 of that base. Selected-tool backgrounds u
 a translucent green (24/255 alpha on dark themes, 32/255 on light themes and
 12/255 on Soft Dark). Links, active-tool glyphs and focus borders use the base on
 dark surfaces (slightly lightened on Soft Dark) and a darker derivative on light
-surfaces for readable contrast.
-Selected rows blend that same tint over their panel surface. Tests cover button
-label contrast (4.5:1) and active-tool/focus contrast (3:1) across all 14 palettes.
+surfaces for readable contrast. Pro Light Gray uses a deeper derivative so small
+links also reach 4.5:1 on its dock and canvas. Keyboard focus rings and drop
+indicators use `accent_border`, rather than the raw brand colour.
+Selected rows blend that same tint over their panel surface; Solarized Dark uses
+a recessed dock tint to keep base0 text above 4.5:1 in the selected row. Tests
+cover button labels (4.5:1), active-tool/focus outlines (3:1) across all 14 palettes,
+small links in Pro Light Gray, and Solarized Dark selection text.
 
 
 | Theme | Intent |

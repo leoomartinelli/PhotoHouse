@@ -44,6 +44,18 @@ antigos arquivados não foram recompilados nem substituídos.
 
 ## Antes e depois
 
+### Correções da revisão da PR #24
+
+Os anéis de foco e todos os indicadores de arrastar e soltar usam `accent_border`
+para manter pelo menos 3:1, inclusive nos temas claros. Links pequenos no Pro
+Light Gray usam um derivado mais escuro e mantêm pelo menos 4,5:1 também no dock
+e no canvas. No Solarized Dark, a linha selecionada usa um fundo derivado do dock
+para preservar o texto base0 acima de 4,5:1. Testes de regressão cobrem esses casos.
+
+O CHECKPOINT foi identificado como registro histórico, e os comentários de tema
+foram atualizados. As capturas originais abaixo documentam a primeira validação;
+as capturas em `review/` registram os temas afetados após a revisão.
+
 | Editor e painéis, escuro | Editor e painéis, claro |
 | --- | --- |
 | ![Antes, escuro](before/editor-proMedium.png) | ![Antes, claro](before/editor-proLight.png) |
@@ -77,3 +89,16 @@ Capturas originais locais da interface, com documento sintético branco e sem
 arquivos pessoais. MIT OR Apache-2.0 para as capturas; marcas e materiais da
 interface mantêm suas condições de origem. Licenças adjacentes e
 [atribuições do projeto](../../../ATTRIBUTION.md).
+
+## Validação após a revisão
+
+- 2.693 testes da interface passaram; 12 ignorados.
+- Clippy de todos os alvos do aplicativo e da interface passou.
+- WebAssembly: 24 alvos; camadas: 29 crates, sem violações.
+- Ferramenta de capturas compilada e três capturas novas inspecionadas.
+
+![Pro Light Gray após a revisão](review/editor-proLightGray.png)
+
+![Pro Light após a revisão](review/editor-proLight.png)
+
+![Solarized Dark após a revisão](review/editor-solarizedDark.png)

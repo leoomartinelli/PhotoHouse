@@ -532,7 +532,7 @@ impl Tokens {
             // copy. Breeze's own inactive text and link blue are only about 2.8:1 on such
             // surfaces, so the secondary and faint text, the accent and danger text and the status
             // hues are darker to hold 4.5:1 (checked by the tests), and the primary button is a
-            // deeper blue that takes white text.
+            // PhotoHouse green that takes dark text.
             ThemeKind::BreezeLight => Tokens {
                 kind,
                 chrome: Color32::from_rgb(219, 222, 226),
@@ -576,13 +576,13 @@ impl Tokens {
             // An adaptation of KDE Plasma's Breeze Dark look on the Studio layout, not a copy: our
             // own values, chosen a few levels from Breeze Dark's surfaces (the darkest canvas, then
             // the dock, the cards, and the chrome and controls) so the app blends into a Plasma
-            // desktop. Near-white text, the blue accent and the orange warning hue sit close to
+            // desktop. Near-white text, the PhotoHouse accent and the orange warning hue sit close to
             // Breeze's, with its 5 px frame radius.
             // Readability wins over fidelity: every text colour holds 4.5:1 on every surface and on
             // the hover, pressed and selected states (checked by the tests), so the secondary and
             // faint text, the accent and danger text and the status hues are lighter than Breeze's,
-            // hover and pressed are small steps, and the primary button is a deeper blue that takes
-            // white text. Outlines and those steps are our own tints.
+            // hover and pressed are small steps, and the primary button uses PhotoHouse green
+            // with dark text. Outlines and those steps are our own tints.
             ThemeKind::BreezeDark => Tokens {
                 kind,
                 chrome: Color32::from_rgb(38, 42, 48),
@@ -624,7 +624,7 @@ impl Tokens {
                 scrim: Color32::from_black_alpha(110),
             },
             // Soft Dark: our own low-contrast palette on the Studio layout. Muted violet-grey
-            // surfaces (never near-black), softened off-white text and a periwinkle accent; the
+            // surfaces (never near-black), softened off-white text and the PhotoHouse accent; the
             // text colours still hold 4.5:1 on every surface (checked by the tests).
             ThemeKind::SoftDark => Tokens {
                 kind,
@@ -667,7 +667,7 @@ impl Tokens {
                 scrim: Color32::from_black_alpha(100),
             },
             // Soft Light: pale violet-grey surfaces, softened dark-violet text (not black) and a
-            // periwinkle accent, with the same generous radii as Soft Dark.
+            // PhotoHouse accent, with the same generous radii as Soft Dark.
             ThemeKind::SoftLight => Tokens {
                 kind,
                 chrome: Color32::from_rgb(232, 230, 236),
@@ -709,7 +709,7 @@ impl Tokens {
                 scrim: Color32::from_black_alpha(90),
             },
             // Ethan Schoonover's Solarized Dark palette: base03 canvas, base02 surfaces, base0
-            // body text and the Solarized blue accent. https://ethanschoonover.com/solarized/
+            // body text and the PhotoHouse accent. https://ethanschoonover.com/solarized/
             // (MIT; see LICENSE-solarized.txt)
             ThemeKind::SolarizedDark => Tokens {
                 kind,
@@ -758,6 +758,9 @@ impl Tokens {
             BRAND_ACCENT.lerp_to_gamma(Color32::WHITE, 0.14)
         } else if tokens.dark() {
             BRAND_ACCENT
+        } else if kind == ThemeKind::ProLightGray {
+            // Small links must also meet 4.5:1 on the darker dock and canvas.
+            BRAND_ACCENT.lerp_to_gamma(Color32::BLACK, 0.72)
         } else {
             BRAND_ACCENT.lerp_to_gamma(Color32::BLACK, 0.60)
         };
@@ -770,7 +773,12 @@ impl Tokens {
             32
         };
         tokens.accent_soft = brand_tint(alpha);
-        tokens.row_selected = tokens.card.lerp_to_gamma(BRAND_ACCENT, f32::from(alpha) / 255.0);
+        tokens.row_selected = if kind == ThemeKind::SolarizedDark {
+            // Base0 text needs a recessed selection rather than a lighter card tint.
+            tokens.dock.lerp_to_gamma(BRAND_ACCENT, 12.0 / 255.0)
+        } else {
+            tokens.card.lerp_to_gamma(BRAND_ACCENT, f32::from(alpha) / 255.0)
+        };
         tokens
     }
 
@@ -1219,7 +1227,7 @@ mod tests {
     #[test]
     fn field_selection_is_grey_only_for_the_monochrome_pro_themes() {
         // #3789: a text field's selection is a subtle grey in the monochrome Pro themes, not a
-        // second blue accent; coloured themes keep their accent.
+        // second accent fill; coloured themes keep their accent.
         assert_eq!(Tokens::for_kind(ThemeKind::Pro).field_selection(), Color32::from_gray(96));
         assert_eq!(Tokens::for_kind(ThemeKind::ProLight).field_selection(), Color32::from_gray(201));
         assert_eq!(Tokens::for_kind(ThemeKind::Studio).field_selection(), Tokens::for_kind(ThemeKind::Studio).accent_soft);
@@ -1305,10 +1313,22 @@ mod tests {
             // Active-tool glyphs and focus outlines must stand out on every UI surface.
             for surface in [t.chrome, t.card, t.dock, t.field, t.hover, t.pressed, t.row_selected] {
                 assert!(contrast(t.accent_text, surface) >= 3.0, "{kind:?}: active tool on {surface:?}");
+                assert!(contrast(t.accent_border, surface) >= 3.0, "{kind:?}: focus/drop outline on {surface:?}");
             }
             // Green document labels retain their semantic hue rather than becoming brand accents.
             assert_eq!(t.layer_label_colors(photocraft_doc::LabelColor::Green).unwrap().0, Color32::from_rgb(0x85, 0xdc, 0x6a));
         }
+    }
+
+    #[test]
+    fn review_text_contrast_on_light_gray_and_solarized_selections() {
+        let light = Tokens::for_kind(ThemeKind::ProLightGray);
+        for surface in [light.chrome, light.card, light.dock, light.canvas, light.field, light.hover, light.pressed, light.row_selected] {
+            assert!(contrast(light.accent_text, surface) >= 4.5, "small link on {surface:?}");
+        }
+        let solarized = Tokens::for_kind(ThemeKind::SolarizedDark);
+        assert!(contrast(solarized.text, solarized.row_selected) >= 4.5, "selected row body text");
+        assert!(contrast(solarized.text, solarized.row_selected) >= contrast(solarized.text, solarized.card), "selection must not lower body-text contrast");
     }
 
     #[test]
