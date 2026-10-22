@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build and package PhotoCraft for FreeBSD:
+# Build and package PhotoHouse for FreeBSD:
 #
-#   $DIST/photocraft-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
-#       photocraft-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
+#   $DIST/photohouse-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
+#       photohouse-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
 #       share/metainfo, share/doc/photocraft}
 #
 # Install by copying the tree's contents into /usr/local:
-#   tar -xzf photocraft-<version>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local
+#   tar -xzf photohouse-<version>-freebsd-x86_64.tar.gz --strip-components 1 -C /usr/local
 #
 # Usage: packaging/freebsd/package.sh [--skip-build] [--dry-run]
 #   --dry-run   stage the tree from stub binaries and list it, without building (works on any OS)
@@ -40,9 +40,9 @@ if [ "$DRY_RUN" = 0 ] && [ "$(uname -s)" != FreeBSD ]; then
   echo "error: build on FreeBSD (or pass --dry-run to check the tree layout)" >&2
   exit 2
 fi
-BASENAME="photocraft-$VERSION-freebsd-$ARCH"
+BASENAME="photohouse-$VERSION-freebsd-$ARCH"
 
-echo "==> PhotoCraft $VERSION for FreeBSD $ARCH"
+echo "==> PhotoHouse $VERSION for FreeBSD $ARCH"
 
 # The release VM has 12 GB; full parallelism on the biggest crates runs it out of memory.
 export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"

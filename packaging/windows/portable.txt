@@ -1,6 +1,6 @@
 PhotoHouse portable mode
 
-While this file sits next to photocraft.exe, PhotoHouse keeps its preferences, brush presets,
+While this file sits next to photohouse.exe, PhotoHouse keeps its preferences, brush presets,
 crash-recovery autosaves and startup state in the PhotoCraftData folder beside it, and writes
 nothing to %APPDATA%. Copy the whole folder to move PhotoHouse with its settings.
 

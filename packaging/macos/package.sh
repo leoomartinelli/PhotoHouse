@@ -1,14 +1,22 @@
 #!/usr/bin/env bash
-# Build, sign and (optionally) notarize the macOS release artifacts:
+# Build, sign and (optionally) notarize the macOS release artifacts of PhotoHouse:
 #
-#   $DIST/photocraft-<version>-macos-<arch>.dmg          PhotoCraft.app on a drag-to-Applications DMG
-#   $DIST/photocraft-cli-<version>-macos-<arch>.zip      the headless CLI
+#   $DIST/photohouse-<version>-macos-<arch>.dmg          PhotoHouse.app on a drag-to-Applications DMG
+#   $DIST/photohouse-cli-<version>-macos-<arch>.zip      the headless CLI (photohouse-cli)
+#
+# The DMG is what House Studio installs: it mounts the image, copies PhotoHouse.app into
+# Applications and reads Contents/Info.plist (CFBundleIdentifier br.com.house.photohouse,
+# PhotoHouseVersion with the full version, CFBundleShortVersionString with the numbers).
 #
 # Usage: packaging/macos/package.sh [--arch universal|aarch64|x86_64] [--skip-build]
 #
+# Version: [workspace.package] version in Cargo.toml; override with PHOTOHOUSE_VERSION (CI).
+#
 # Signing (env):
-#   MACOS_SIGN_IDENTITY   codesign identity (name or SHA-1). Default "-" = ad-hoc (local testing;
-#                         Gatekeeper will reject the result on other Macs). In CI, import-cert.sh sets it.
+#   MACOS_SIGN_IDENTITY   codesign identity (name or SHA-1). Default "-" = ad-hoc, which is what
+#                         House de Criatividade ships today (there is no Apple certificate yet).
+#                         With a real identity (import-cert.sh sets it in CI) the app gets the
+#                         hardened runtime and a secure timestamp.
 #   MACOS_KEYCHAIN        keychain holding the identity (optional)
 # Notarization (env; all three needed, and a real identity):
 #   APPLE_ID, APPLE_PASSWORD (app-specific password), APPLE_TEAM_ID
@@ -23,7 +31,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --arch) ARCH="$2"; shift 2 ;;
     --skip-build) SKIP_BUILD=1; shift ;;
-    -h | --help) sed -n '2,16p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,22p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -34,14 +42,26 @@ case "$ARCH" in
   *) echo "unknown --arch $ARCH" >&2; exit 2 ;;
 esac
 
+# Display name (bundle, executable, volume) and machine name (artifacts, CLI). The cargo
+# packages and the binaries they build keep the upstream names (photocraft, photocraft-cli).
+APP_NAME=PhotoHouse
+APP_STEM=photohouse
+BUNDLE_ID=br.com.house.photohouse
+
 # Keep in sync with LSMinimumSystemVersion in Info.plist.in.
 export MACOSX_DEPLOYMENT_TARGET=11.0
 IDENTITY="${MACOS_SIGN_IDENTITY:--}"
 SHORT_VERSION="${VERSION%%-*}"
+case "$SHORT_VERSION" in
+  *[!0-9.]* | "" | .* | *. | *..*)
+    echo "error: version $VERSION has no numeric X.Y.Z part for CFBundleShortVersionString" >&2
+    exit 1
+    ;;
+esac
 WORK="$CARGO_TARGET_DIR/macos-package"
-APP="$WORK/PhotoCraft.app"
-DMG="$DIST/photocraft-$VERSION-macos-$ARCH.dmg"
-CLI_ZIP="$DIST/photocraft-cli-$VERSION-macos-$ARCH.zip"
+APP="$WORK/$APP_NAME.app"
+DMG="$DIST/$APP_STEM-$VERSION-macos-$ARCH.dmg"
+CLI_ZIP="$DIST/$APP_STEM-cli-$VERSION-macos-$ARCH.zip"
 
 NOTARIZE=0
 if [ "$IDENTITY" = "-" ]; then
@@ -52,7 +72,7 @@ else
   warn "macOS: APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID incomplete; signed but not notarized"
 fi
 
-echo "==> PhotoCraft $VERSION for macOS ($ARCH), identity: $IDENTITY, notarize: $NOTARIZE"
+echo "==> $APP_NAME $VERSION for macOS ($ARCH), identity: $IDENTITY, notarize: $NOTARIZE"
 
 # ---- build -------------------------------------------------------------------------------------
 if [ "$SKIP_BUILD" = 0 ]; then
@@ -65,19 +85,26 @@ rm -rf "$WORK"
 mkdir -p "$WORK/bin"
 for bin in photocraft photocraft-cli; do
   inputs=()
-  for t in "${TARGETS[@]}"; do inputs+=("$CARGO_TARGET_DIR/$t/release/$bin"); done
+  for t in "${TARGETS[@]}"; do
+    f="$CARGO_TARGET_DIR/$t/release/$bin"
+    [ -x "$f" ] || { echo "error: $f is missing (build it, or drop --skip-build)" >&2; exit 1; }
+    inputs+=("$f")
+  done
   lipo -create -output "$WORK/bin/$bin" "${inputs[@]}"
   lipo -info "$WORK/bin/$bin"
 done
 
 # ---- signing helpers ---------------------------------------------------------------------------
 sign() {
-  # Hardened runtime + secure timestamp for a real identity; ad-hoc can't be timestamped.
-  local ts=(--timestamp)
-  [ "$IDENTITY" = "-" ] && ts=(--timestamp=none)
-  local kc=()
-  [ -n "${MACOS_KEYCHAIN:-}" ] && kc=(--keychain "$MACOS_KEYCHAIN")
-  codesign --force --sign "$IDENTITY" ${kc[@]+"${kc[@]}"} "${ts[@]}" "$@"
+  if [ "$IDENTITY" = "-" ]; then
+    # Ad-hoc: no certificate, no timestamp. --deep also seals any nested code in a bundle.
+    codesign --force --deep --sign - --timestamp=none "$@"
+  else
+    # Hardened runtime + secure timestamp for a real identity.
+    local kc=()
+    [ -n "${MACOS_KEYCHAIN:-}" ] && kc=(--keychain "$MACOS_KEYCHAIN")
+    codesign --force --sign "$IDENTITY" ${kc[@]+"${kc[@]}"} --timestamp --options runtime "$@"
+  fi
 }
 
 notarize() {
@@ -97,12 +124,12 @@ notarize() {
   fi
 }
 
-# ---- PhotoCraft.app ----------------------------------------------------------------------------
+# ---- PhotoHouse.app ----------------------------------------------------------------------------
 echo "==> assembling $APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # Executable and icon carry the display name (CFBundleExecutable / CFBundleIconFile).
-cp "$WORK/bin/photocraft" "$APP/Contents/MacOS/PhotoCraft"
-cp "$ROOT/assets/app-icon/photocraft.icns" "$APP/Contents/Resources/PhotoCraft.icns"
+cp "$WORK/bin/photocraft" "$APP/Contents/MacOS/$APP_NAME"
+cp "$ROOT/assets/app-icon/photocraft.icns" "$APP/Contents/Resources/$APP_NAME.icns"
 # Licences of the embedded craft-fonts fonts (only when built with CRAFT_FONTS_DIR).
 if [ -n "${CRAFT_FONTS_DIR:-}" ]; then
   mkdir -p "$APP/Contents/Resources/Licenses"
@@ -114,15 +141,25 @@ sed -e "s/@VERSION@/$VERSION/g" -e "s/@SHORT_VERSION@/$SHORT_VERSION/g" \
 plutil -lint "$APP/Contents/Info.plist"
 printf 'APPL????' >"$APP/Contents/PkgInfo"
 
-# Sign inside-out: nested code first, then the bundle itself (no --deep on the final signature).
-# Today the only nested code is the main executable; frameworks/helpers would be signed here too.
-sign --options runtime --entitlements "$HERE/entitlements.plist" "$APP/Contents/MacOS/PhotoCraft"
-sign --options runtime --entitlements "$HERE/entitlements.plist" "$APP"
+# What House Studio reads (its crates/native/src/detect.rs): fail here, not on someone's Mac.
+plist_is() {
+  local got
+  got="$(/usr/libexec/PlistBuddy -c "Print :$1" "$APP/Contents/Info.plist" 2>/dev/null || true)"
+  [ "$got" = "$2" ] || { echo "error: Info.plist $1 is '$got', expected '$2'" >&2; exit 1; }
+}
+plist_is CFBundleIdentifier "$BUNDLE_ID"
+plist_is CFBundleExecutable "$APP_NAME"
+plist_is CFBundleShortVersionString "$SHORT_VERSION"
+plist_is "${APP_NAME}Version" "$VERSION"
+
+# Sign inside-out: the executable first, then the bundle itself.
+sign --entitlements "$HERE/entitlements.plist" --identifier "$BUNDLE_ID" "$APP/Contents/MacOS/$APP_NAME"
+sign --entitlements "$HERE/entitlements.plist" "$APP"
 codesign --verify --strict --deep --verbose=2 "$APP"
 
 if [ "$NOTARIZE" = 1 ]; then
-  ditto -c -k --keepParent "$APP" "$WORK/PhotoCraft-notarize.zip"
-  notarize "$WORK/PhotoCraft-notarize.zip"
+  ditto -c -k --keepParent "$APP" "$WORK/$APP_NAME-notarize.zip"
+  notarize "$WORK/$APP_NAME-notarize.zip"
   xcrun stapler staple "$APP"
   xcrun stapler validate "$APP"
   spctl --assess --type execute -vvv "$APP"
@@ -132,7 +169,7 @@ fi
 echo "==> building $DMG"
 STAGE="$WORK/dmg"
 mkdir -p "$STAGE"
-ditto "$APP" "$STAGE/PhotoCraft.app"
+ditto "$APP" "$STAGE/$APP_NAME.app"
 ln -s /Applications "$STAGE/Applications"
 # Finder window layout: background, icon size and positions (packaging/macos/dmg/README.md).
 mkdir -p "$STAGE/.background"
@@ -142,7 +179,7 @@ rm -f "$DMG" "$WORK/raw.dmg"
 # makehybrid + convert builds the image without attaching a device, unlike `create -srcfolder`,
 # which is flaky on CI runners ("Resource busy") and hangs in sandboxed sessions.
 # The volume name has no version: .DS_Store finds the background through an alias that includes it.
-hdiutil makehybrid -hfs -hfs-volume-name "PhotoCraft" -hfs-openfolder "$STAGE" -o "$WORK/raw.dmg" "$STAGE"
+hdiutil makehybrid -hfs -hfs-volume-name "$APP_NAME" -hfs-openfolder "$STAGE" -o "$WORK/raw.dmg" "$STAGE"
 hdiutil convert "$WORK/raw.dmg" -format UDZO -imagekey zlib-level=9 -o "$DMG"
 rm -f "$WORK/raw.dmg"
 sign "$DMG"
@@ -156,14 +193,13 @@ fi
 
 # ---- CLI ---------------------------------------------------------------------------------------
 echo "==> building $CLI_ZIP"
-CLI_DIR="$WORK/photocraft-cli-$VERSION-macos-$ARCH"
+CLI_DIR="$WORK/$APP_STEM-cli-$VERSION-macos-$ARCH"
 mkdir -p "$CLI_DIR"
-cp "$WORK/bin/photocraft-cli" "$CLI_DIR/"
+cp "$WORK/bin/photocraft-cli" "$CLI_DIR/$APP_STEM-cli"
 copy_docs "$CLI_DIR"
-# Same Developer ID and hardened runtime as the app, with an explicit reverse-DNS identifier
-# (codesign would otherwise use the bare file name).
-sign --options runtime --identifier ai.storyteller.photocraft-cli "$CLI_DIR/photocraft-cli"
-codesign --verify --strict --verbose=2 "$CLI_DIR/photocraft-cli"
+# An explicit reverse-DNS identifier (codesign would otherwise use the bare file name).
+sign --identifier "$BUNDLE_ID-cli" "$CLI_DIR/$APP_STEM-cli"
+codesign --verify --strict --verbose=2 "$CLI_DIR/$APP_STEM-cli"
 rm -f "$CLI_ZIP"
 ditto -c -k --keepParent "$CLI_DIR" "$CLI_ZIP"
 # notarytool accepts a zip of the bare binary. A bare Mach-O can't carry a stapled ticket, so

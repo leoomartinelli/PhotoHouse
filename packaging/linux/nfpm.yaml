@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: photocraft
+name: photohouse
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -13,8 +13,8 @@ release: 1
 section: graphics
 priority: optional
 maintainer: ${PHOTOCRAFT_MAINTAINER}
-vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/photocraft
+vendor: House de Criatividade
+homepage: https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse
 license: MIT OR Apache-2.0
 description: |-
   Open-source, native image editor with familiar, professional tools.

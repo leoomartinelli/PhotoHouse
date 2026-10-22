@@ -37,9 +37,11 @@
   <key>CFBundleName</key>
   <string>PhotoHouse</string>
   <key>CFBundleExecutable</key>
-  <string>PhotoCraft</string>
+  <string>PhotoHouse</string>
+  <!-- House Studio finds the installed app by this id and reads PhotoHouseVersion (the full
+       version, pre-release included) before CFBundleShortVersionString (numbers only). -->
   <key>CFBundleIdentifier</key>
-  <string>ai.storyteller.photocraft</string>
+  <string>br.com.house.photohouse</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundlePackageType</key>
@@ -50,12 +52,12 @@
   <string>@SHORT_VERSION@</string>
   <key>CFBundleVersion</key>
   <string>@SHORT_VERSION@</string>
-  <key>PhotoCraftVersion</key>
+  <key>PhotoHouseVersion</key>
   <string>@VERSION@</string>
-  <key>PhotoCraftBuildCommit</key>
+  <key>PhotoHouseBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>PhotoCraft</string>
+  <string>PhotoHouse</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.graphics-design</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
@@ -69,14 +71,14 @@
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © the PhotoCraft authors. MIT OR Apache-2.0.</string>
+  <string>Copyright © House de Criatividade and the PhotoCraft authors. MIT OR Apache-2.0.</string>
 
-  <!-- Photocraft's own format. -->
+  <!-- PhotoHouse's own format (.pcraft, shared with upstream PhotoCraft). -->
   <key>UTExportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.document</string>
+      <string>br.com.house.photohouse.document</string>
       <key>UTTypeDescription</key>
       <string>PhotoHouse Document</string>
       <key>UTTypeConformsTo</key>
@@ -85,7 +87,7 @@
         <string>public.image</string>
       </array>
       <key>UTTypeIconFile</key>
-      <string>PhotoCraft</string>
+      <string>PhotoHouse</string>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
@@ -100,7 +102,7 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.ora</string>
+      <string>br.com.house.photohouse.ora</string>
       <key>UTTypeDescription</key>
       <string>OpenRaster Image</string>
       <key>UTTypeConformsTo</key>
@@ -115,7 +117,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.kra</string>
+      <string>br.com.house.photohouse.kra</string>
       <key>UTTypeDescription</key>
       <string>Krita Document</string>
       <key>UTTypeConformsTo</key>
@@ -130,7 +132,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.pdn</string>
+      <string>br.com.house.photohouse.pdn</string>
       <key>UTTypeDescription</key>
       <string>Paint.NET Document</string>
       <key>UTTypeConformsTo</key>
@@ -161,7 +163,7 @@
     </dict>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>ai.storyteller.photocraft.qoi</string>
+      <string>br.com.house.photohouse.qoi</string>
       <key>UTTypeDescription</key>
       <string>QOI Image</string>
       <key>UTTypeConformsTo</key>
@@ -187,9 +189,9 @@
       <key>LSHandlerRank</key>
       <string>Owner</string>
       <key>CFBundleTypeIconFile</key>
-      <string>PhotoCraft</string>
+      <string>PhotoHouse</string>
       <key>LSItemContentTypes</key>
-      <array><string>ai.storyteller.photocraft.document</string></array>
+      <array><string>br.com.house.photohouse.document</string></array>
     </dict>
     <dict>
       <key>CFBundleTypeName</key>
@@ -225,10 +227,10 @@
         <string>com.ilm.openexr-image</string>
         <string>public.radiance</string>
         <string>public.avif</string>
-        <string>ai.storyteller.photocraft.qoi</string>
-        <string>ai.storyteller.photocraft.pdn</string>
-        <string>ai.storyteller.photocraft.ora</string>
-        <string>ai.storyteller.photocraft.kra</string>
+        <string>br.com.house.photohouse.qoi</string>
+        <string>br.com.house.photohouse.pdn</string>
+        <string>br.com.house.photohouse.ora</string>
+        <string>br.com.house.photohouse.kra</string>
       </array>
     </dict>
   </array>

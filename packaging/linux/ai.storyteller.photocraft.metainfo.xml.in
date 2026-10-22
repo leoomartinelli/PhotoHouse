@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- AppStream metadata (software centres, Flathub). Template: package.sh and the Flatpak
+<!-- AppStream metadata (software centres, Flathub). The id stays the upstream app id: it must
+     match the window's app_id (APP_ID in apps/photocraft/src/main.rs), which also names the
+     folder where the editor keeps its window state. Template: package.sh and the Flatpak
      manifest substitute @VERSION@ and @DATE@ from Cargo.toml and the build date. -->
 <component type="desktop-application">
   <id>ai.storyteller.photocraft</id>
@@ -7,8 +9,8 @@
   <project_license>MIT OR Apache-2.0</project_license>
   <name>PhotoHouse</name>
   <summary>Edit photos and layered PSD documents</summary>
-  <developer id="ai.storyteller">
-    <name>Learning Machines LLC</name>
+  <developer id="br.com.house">
+    <name>House de Criatividade</name>
   </developer>
   <description>
     <p>
@@ -26,10 +28,8 @@
   <launchable type="desktop-id">ai.storyteller.photocraft.desktop</launchable>
   <icon type="stock">ai.storyteller.photocraft</icon>
   <!-- Only url types known to appstream 0.15 (Ubuntu 22.04, where CI validates): no vcs-browser. -->
-  <url type="homepage">https://getartcraft.com/apps/photocraft</url>
-  <url type="bugtracker">https://github.com/storytold/photocraft/issues</url>
-  <url type="help">https://github.com/storytold/photocraft</url>
-  <url type="contact">https://discord.gg/artcraft</url>
+  <url type="homepage">https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse</url>
+  <url type="bugtracker">https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse/issues</url>
   <categories>
     <category>Graphics</category>
     <category>RasterGraphics</category>
@@ -41,12 +41,6 @@
     <keyword>psd</keyword>
     <keyword>layers</keyword>
   </keywords>
-  <screenshots>
-    <screenshot type="default">
-      <caption>Editing The Great Wave off Kanagawa with type layers and adjustment layers</caption>
-      <image>https://raw.githubusercontent.com/storytold/photocraft/main/docs/images/photocraft-demo.jpg</image>
-    </screenshot>
-  </screenshots>
   <branding>
     <color type="primary" scheme_preference="light">#9fd0ff</color>
     <color type="primary" scheme_preference="dark">#1f64ba</color>

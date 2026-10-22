@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Check the macOS release artifacts exactly as users download them:
 #
-#   $DIST/photocraft-<version>-macos-<arch>.dmg       signed, notarized, ticket stapled
-#   $DIST/photocraft-cli-<version>-macos-<arch>.zip   unpacked here; the binary inside must be
+#   $DIST/photohouse-<version>-macos-<arch>.dmg       mounted read-only here: PhotoHouse.app must be
+#                                                    what House Studio expects (bundle id, version
+#                                                    keys); signed, notarized, ticket stapled
+#   $DIST/photohouse-cli-<version>-macos-<arch>.zip   unpacked here; the binary inside must be
 #                                                    Developer ID signed with the hardened runtime,
 #                                                    timestamped and notarized
 #
@@ -37,8 +39,8 @@ case "$ARCH" in
   *) echo "unknown --arch $ARCH" >&2; exit 2 ;;
 esac
 
-DMG="$DIST/photocraft-$VERSION-macos-$ARCH.dmg"
-CLI_ZIP="$DIST/photocraft-cli-$VERSION-macos-$ARCH.zip"
+DMG="$DIST/photohouse-$VERSION-macos-$ARCH.dmg"
+CLI_ZIP="$DIST/photohouse-cli-$VERSION-macos-$ARCH.zip"
 IDENTITY="${MACOS_SIGN_IDENTITY:--}"
 STRICT=0
 if [ "$IDENTITY" != "-" ] && [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
@@ -77,15 +79,15 @@ for f in "$DMG" "$CLI_ZIP"; do
   fi
 done
 
-WORK="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/photocraft-verify.XXXXXX")"
+WORK="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/photohouse-verify.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
 # ---- CLI zip -----------------------------------------------------------------------------------
 echo "==> $(basename "$CLI_ZIP")"
 ditto -x -k "$CLI_ZIP" "$WORK/cli"
-CLI="$WORK/cli/photocraft-cli-$VERSION-macos-$ARCH/photocraft-cli"
+CLI="$WORK/cli/photohouse-cli-$VERSION-macos-$ARCH/photohouse-cli"
 if [ ! -x "$CLI" ]; then
-  echo "error: $(basename "$CLI_ZIP") has no executable photocraft-cli-$VERSION-macos-$ARCH/photocraft-cli" >&2
+  echo "error: $(basename "$CLI_ZIP") has no executable photohouse-cli-$VERSION-macos-$ARCH/photohouse-cli" >&2
   exit 1
 fi
 
@@ -93,7 +95,7 @@ archs="$(lipo -archs "$CLI")"
 for a in $WANT_ARCHS; do
   case " $archs " in
     *" $a "*) ;;
-    *) echo "error: photocraft-cli lacks $a (has: $archs)" >&2; exit 1 ;;
+    *) echo "error: photohouse-cli lacks $a (has: $archs)" >&2; exit 1 ;;
   esac
 done
 
@@ -103,28 +105,51 @@ details="$(codesign -d --verbose=2 "$CLI" 2>&1)"
 printf '%s\n' "$details" | grep -E '^(Identifier|Format|CodeDirectory|Authority|Timestamp|TeamIdentifier)[= ]' || true
 
 printf '%s\n' "$details" | grep -Eq '^CodeDirectory .*flags=0x[0-9a-f]+\([^)]*runtime' \
-  || fail "photocraft-cli is not signed with the hardened runtime"
+  || fail "photohouse-cli is not signed with the hardened runtime"
 printf '%s\n' "$details" | grep -q '^Authority=Developer ID Application:' \
-  || fail "photocraft-cli is not signed with a Developer ID Application identity"
+  || fail "photohouse-cli is not signed with a Developer ID Application identity"
 printf '%s\n' "$details" | grep -q '^Timestamp=' \
-  || fail "photocraft-cli signature has no secure timestamp"
+  || fail "photohouse-cli signature has no secure timestamp"
 if [ -n "${APPLE_TEAM_ID:-}" ]; then
   printf '%s\n' "$details" | grep -qx "TeamIdentifier=$APPLE_TEAM_ID" \
-    || fail "photocraft-cli is signed by a different team"
+    || fail "photohouse-cli is signed by a different team"
 fi
 if gk="$(assess --assess --type install -vv "$CLI")"; then
   printf '%s\n' "$gk"
   printf '%s\n' "$gk" | grep -q 'source=Notarized Developer ID' \
-    || fail "Gatekeeper accepts photocraft-cli but not as notarized"
+    || fail "Gatekeeper accepts photohouse-cli but not as notarized"
 else
   printf '%s\n' "$gk"
-  fail "Gatekeeper rejects photocraft-cli (not notarized?)"
+  fail "Gatekeeper rejects photohouse-cli (not notarized?)"
 fi
 "$CLI" --version
 
 # ---- DMG ---------------------------------------------------------------------------------------
 echo "==> $(basename "$DMG")"
 codesign --verify --strict --verbose=2 "$DMG"
+# House Studio mounts the image and copies PhotoHouse.app from its root, reading Info.plist.
+MOUNT="$WORK/mnt"
+mkdir -p "$MOUNT"
+hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$MOUNT" "$DMG" >/dev/null
+APP="$MOUNT/PhotoHouse.app"
+PLIST="$APP/Contents/Info.plist"
+plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$PLIST" 2>/dev/null || true; }
+dmg_ok=1
+[ -d "$APP" ] || { echo "error: the DMG has no PhotoHouse.app at its root" >&2; dmg_ok=0; }
+if [ "$dmg_ok" = 1 ]; then
+  [ "$(plist CFBundleIdentifier)" = "br.com.house.photohouse" ] || { echo "error: CFBundleIdentifier is '$(plist CFBundleIdentifier)'" >&2; dmg_ok=0; }
+  [ "$(plist PhotoHouseVersion)" = "$VERSION" ] || { echo "error: PhotoHouseVersion is '$(plist PhotoHouseVersion)', expected $VERSION" >&2; dmg_ok=0; }
+  [ "$(plist CFBundleShortVersionString)" = "${VERSION%%-*}" ] || { echo "error: CFBundleShortVersionString is '$(plist CFBundleShortVersionString)'" >&2; dmg_ok=0; }
+  exe="$APP/Contents/MacOS/$(plist CFBundleExecutable)"
+  [ -x "$exe" ] || { echo "error: $exe is not executable" >&2; dmg_ok=0; }
+  # Like House Studio: copy without the volume's Finder metadata (com.apple.FinderInfo, which
+  # `codesign --strict` calls detritus), then the bundle's own signature must verify.
+  ditto --norsrc --noextattr --noacl "$APP" "$WORK/copied/PhotoHouse.app"
+  codesign --verify --strict --deep --verbose=2 "$WORK/copied/PhotoHouse.app" || dmg_ok=0
+  echo "PhotoHouse.app: $(plist CFBundleIdentifier) $(plist PhotoHouseVersion), $(lipo -archs "$exe" 2>/dev/null)"
+fi
+hdiutil detach "$MOUNT" -quiet || hdiutil detach "$MOUNT" -force -quiet
+[ "$dmg_ok" = 1 ] || { echo "error: the DMG is not what House Studio installs" >&2; exit 1; }
 if [ "$STRICT" = 1 ]; then
   xcrun stapler validate "$DMG" || fail "no notarization ticket stapled to the DMG"
   assess --assess --type open --context context:primary-signature -vv "$DMG" \

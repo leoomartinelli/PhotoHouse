@@ -3,9 +3,11 @@
 #
 # Exports:
 #   ROOT                    workspace root
-#   VERSION                 [workspace.package] version from Cargo.toml (override: PHOTOCRAFT_VERSION)
+#   VERSION                 [workspace.package] version from Cargo.toml (override: PHOTOHOUSE_VERSION;
+#                           the upstream name PHOTOCRAFT_VERSION still works)
 #   DIST                    output directory for release artifacts (default: $ROOT/dist/release)
-#   PHOTOCRAFT_BUILD_SHA    git commit baked into the binaries (see crates/engine/src/build_info.rs)
+#   PHOTOCRAFT_BUILD_SHA    git commit baked into the binaries (see crates/engine/src/build_info.rs;
+#                           the variable keeps the upstream name because the engine's build reads it)
 #   PHOTOCRAFT_BUILD_DATE   UTC build date, YYYY-MM-DD
 #   CARGO_TARGET_DIR        cargo's target dir (default: $ROOT/target)
 
@@ -21,7 +23,9 @@ workspace_version() {
   ' "$ROOT/Cargo.toml"
 }
 
-VERSION="${PHOTOCRAFT_VERSION:-$(workspace_version)}"
+# CI can override it (a tag such as v0.8.3 is accepted; the leading "v" is dropped).
+VERSION="${PHOTOHOUSE_VERSION:-${PHOTOCRAFT_VERSION:-$(workspace_version)}}"
+VERSION="${VERSION#v}"
 if [ -z "$VERSION" ]; then
   echo "error: could not read [workspace.package] version from $ROOT/Cargo.toml" >&2
   exit 1

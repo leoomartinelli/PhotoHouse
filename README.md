@@ -42,6 +42,12 @@ cargo xtask layers
 Mudanças compartilhadas com a Web exigem também `cargo xtask wasm`.
 As verificações adicionais estão em [AGENTS.md](AGENTS.md).
 
+## Pacotes para o House Studio
+
+O `.dmg` do macOS e o `.zip` portátil do Windows que o House Studio instala são gerados por
+`packaging/macos/package.sh` e `packaging/windows/package.ps1`. Veja
+[packaging/README.md](packaging/README.md).
+
 ## Instalador Windows
 
 Consulte [packaging/windows/PHOTOHOUSE-INSTALLER.md](packaging/windows/PHOTOHOUSE-INSTALLER.md).

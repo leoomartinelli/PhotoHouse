@@ -14,7 +14,7 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # Fake AppDir with the real AppRun, .desktop template, icons, and a stub binary.
-APPDIR="$TMP/PhotoCraft.AppDir"
+APPDIR="$TMP/PhotoHouse.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
 install -Dm644 "$HERE/$APP_ID.desktop" "$APPDIR/usr/share/applications/$APP_ID.desktop"
@@ -76,7 +76,7 @@ grep -Fxq "Exec=\"$(readlink -f "$APPIMAGE")\" %F" "$DESKTOP" || fail "Exec not 
 #    already launches this AppImage (e.g. AppImageLauncher's appimagekit-*.desktop), AppRun removes
 #    its own duplicate .desktop entry while keeping the hicolor icons installed.
 ext_desktop="$XDG_DATA_HOME/applications/appimagekit-photocraft.desktop"
-printf '[Desktop Entry]\nType=Application\nName=PhotoCraft\nExec="%s" %%F\nIcon=%s\n' "$(readlink -f "$APPIMAGE")" "$APP_ID" >"$ext_desktop"
+printf '[Desktop Entry]\nType=Application\nName=PhotoHouse\nExec="%s" %%F\nIcon=%s\n' "$(readlink -f "$APPIMAGE")" "$APP_ID" >"$ext_desktop"
 "$APPDIR/AppRun" >/dev/null || fail "launch with external integrator desktop entry exited non-zero"
 [ ! -e "$DESKTOP" ] || fail "duplicate desktop entry kept alongside external integrator entry"
 [ -f "$ext_desktop" ] || fail "external integrator desktop entry removed"
