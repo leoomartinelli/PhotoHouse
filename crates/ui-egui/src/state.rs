@@ -736,7 +736,7 @@ fn fifty() -> f32 {
     50.0
 }
 
-/// The session brush starts out as the Brush's (the tool the app opens with).
+/// The session brush settings initially belong to Brush, even when Move is selected.
 fn default_brush_tool() -> Tool {
     Tool::Brush
 }
@@ -1269,7 +1269,7 @@ pub struct UiState {
 impl Default for UiState {
     fn default() -> Self {
         Self {
-            tool: Tool::Brush,
+            tool: Tool::Move,
             group_tools: Vec::new(),
             spring: None,
             recent_files: Vec::new(),
@@ -1470,7 +1470,7 @@ mod tests {
     fn ui_state_serializes() {
         let s = UiState::default();
         let v = serde_json::to_value(&s).unwrap();
-        assert_eq!(v["tool"], "Brush");
+        assert_eq!(v["tool"], "Move");
         let back: UiState = serde_json::from_value(v).unwrap();
         assert_eq!(back, s);
     }

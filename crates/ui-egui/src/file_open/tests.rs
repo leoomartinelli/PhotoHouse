@@ -897,3 +897,17 @@ fn successful_open_selects_move_but_failed_open_keeps_tool() {
     app.open_automation_bytes("second.png", b"image").unwrap();
     assert_eq!(app.active_tool(), Tool::Move);
 }
+
+#[test]
+fn launching_app_selects_move_before_opening_any_file() {
+    use crate::state::Tool;
+    let (mut app, _) = app_with(vec![]);
+    assert!(app.session.documents().is_empty());
+    assert_eq!(app.active_tool(), Tool::Move);
+    // Remembered options restore values, not the previous selected tool.
+    app.session.edit_prefs(|p| p.tool_options = json!({"move_auto_select": false}));
+    crate::tool_memory::restore(&mut app);
+    assert_eq!(app.active_tool(), Tool::Move);
+    app.ui.tool = Tool::Brush;
+    assert_eq!(app.active_tool(), Tool::Brush);
+}

@@ -22,3 +22,11 @@ Testes adicionados: cápsula geométrica de referência (20/100/300 px, horizont
 - Captura offscreen: arquivo aberto com Move selecionada e opções de seleção/movimentação visíveis; conferida visualmente.
 - WebAssembly: todos os crates avaliados por `cargo xtask wasm` passaram (incluindo codecs/heif). Avisos de código não utilizado em arquivos não alterados foram mantidos.
 - `cargo xtask perf --quick`: terminou com exit 0; os cinco benchmarks executaram. A comparação automática de regressão foi pulada por diferença de classe de máquina (baseline macOS/Apple M4 Pro, execução Windows/NVIDIA). O modo quick não aplica os orçamentos de documentos completos. Relatório local: `target/perf/results.json`.
+
+## Complemento: ferramenta inicial do aplicativo
+
+`UiState::default()` também seleciona Move antes de abrir qualquer arquivo, mantendo os dados de Brush em `brush_tool` para quando o usuário selecionar o pincel. A restauração das opções salvas não muda a seleção inicial. Adicionado teste da inicialização sem documentos e atualizada a expectativa da serialização.
+
+Os testes que pressupunham Brush agora verificam o novo padrão ou selecionam explicitamente Type quando simulam edição de texto. O teste de espaçamento de Opacity/Fill passou a localizar os botões do painel de camadas, evitando depender do campo de Opacity da barra de Brush.
+
+Validação: 2.694 testes UI aprovados na bateria, mais o teste de layout corrigido aprovado em execução específica (12 ignorados). Clippy, fmt, layers, wasm e build release passaram. Captura local `plan/issue-25/startup-move.png` conferida: tela inicial sem documentos com Move selecionada. Novo executável `C:/photocraft-main/PhotoHouse-teste-issue-25/PhotoHouse-Move-Inicial.exe`, verificado com `--version` (exit 0).

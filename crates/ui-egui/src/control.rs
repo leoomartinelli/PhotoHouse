@@ -1905,13 +1905,13 @@ mod tests {
         let ctx = egui::Context::default();
         app.set_theme(&ctx, ThemeKind::StudioLight);
         // `dark` was advertised to MCP clients but never read; a typo looked like success too.
-        for params in [json!({"dark": true}), json!({"thme": "classic"}), json!({"tool": "move", "dark": true})] {
+        for params in [json!({"dark": true}), json!({"thme": "classic"}), json!({"tool": "brush", "dark": true})] {
             let r = call(&mut app, &ctx, "ui.set", params.clone());
             assert_eq!(r["ok"], false, "{params}: {r}");
             assert!(r["error"].as_str().unwrap().contains("unknown field"), "{r}");
         }
         assert_eq!(app.ui.theme, ThemeKind::StudioLight);
-        assert_eq!(app.ui.tool, Tool::Brush, "a rejected call applies none of its fields");
+        assert_eq!(app.ui.tool, Tool::Move, "a rejected call applies none of its fields");
         // Every field the method reads gets past the check (a bad value is its own error).
         for field in UI_SET_FIELDS {
             let r = call(&mut app, &ctx, "ui.set", json!({ field: null }));
