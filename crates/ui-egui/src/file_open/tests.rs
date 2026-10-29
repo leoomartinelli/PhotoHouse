@@ -883,3 +883,17 @@ fn opening_type_in_a_missing_font_warns() {
     // The importer's own warning for the same font isn't doubled.
     assert_eq!(app.open_bytes("warned.psd", b"x").unwrap(), vec![warning]);
 }
+
+#[test]
+fn successful_open_selects_move_but_failed_open_keeps_tool() {
+    use crate::state::Tool;
+    let (mut app, _) = app_with(vec![]);
+    app.ui.tool = Tool::Brush;
+    app.open_file("first.png", b"image").unwrap();
+    assert_eq!(app.active_tool(), Tool::Move);
+    app.ui.tool = Tool::Brush;
+    assert!(app.open_file("bad.png", b"bad").is_err());
+    assert_eq!(app.active_tool(), Tool::Brush);
+    app.open_automation_bytes("second.png", b"image").unwrap();
+    assert_eq!(app.active_tool(), Tool::Move);
+}

@@ -1,12 +1,17 @@
 # Brush and painting parity
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-13 · **Change:** minor (Hue Jitter amount track; Brush Settings minimum fields follow their Control; checkbox-only rows and non-destructive Smoothing switch; shaped-tip cursor follows the view) · **Target:** Adobe Photoshop 2026
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-28 · **Change:** minor (Hue Jitter amount track; Brush Settings minimum fields follow their Control; checkbox-only rows and non-destructive Smoothing switch; shaped-tip cursor follows the view) · **Target:** Adobe Photoshop 2026
 
 Painting is where Photoshop users notice differences first, so it gets its own checklist: the
 brush engine (`crates/paint/src/brush.rs`), the Brush Settings UI
 (`crates/ui-egui/src/brush_sections.rs`), the live stroke renderer, pen input
 ([`hardware-parity.md`](hardware-parity.md)), and the brush-based tools. Status words as in
 [`ui-parity.md`](ui-parity.md).
+
+**PhotoHouse #25 (2026-10-28):** solid round tips at spacing <= 10% use swept-disc coverage
+(including linearly varying pressure radius), keeping the contour continuous independently of
+pointer event density. Tiny tips and effect brushes retain their dab rasterization. See
+[implementation and validation](issue-25-brush.md). Estimated parity percentages are unchanged.
 
 **Summary (estimated):** breadth ~90% (every Brush Settings section and option exists), ready for
 real work ~55%. The engine models what Photoshop models; the gaps are feel (latency, pressure

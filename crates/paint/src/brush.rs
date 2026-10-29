@@ -582,6 +582,30 @@ impl Default for BrushSettings {
 }
 
 impl BrushSettings {
+    /// Sweep simple solid tips; preserve deliberately spaced and effect brushes.
+    pub(crate) fn continuous_round(&self) -> bool {
+        matches!(self.tip, TipShape::Round)
+            && self.size >= 4.0
+            && self.hardness == 1.0
+            && self.roundness == 1.0
+            && !self.aliased
+            && !self.square
+            && self.spacing_enabled
+            && self.spacing <= 0.1
+            && self.flow == 1.0
+            && !self.pressure_opacity
+            && !self.shape_dynamics.enabled
+            && !self.scattering.enabled
+            && !self.texture.enabled
+            && !self.dual_brush.enabled
+            && !self.color_dynamics.enabled
+            && !self.transfer.enabled
+            && !self.pose.enabled
+            && !self.noise
+            && !self.wet_edges
+            && !self.build_up
+    }
+
     /// Copy the settings with the primary and dual diameters and Scatter amounts constrained for
     /// rasterization.
     ///

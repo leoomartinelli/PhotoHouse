@@ -665,6 +665,7 @@ pub struct DabGenerator {
     walker: PathWalker,
     dual_walker: Option<PathWalker>,
     builder: DabBuilder,
+    continuous: bool,
     dual: Option<DualBuilder>,
     scratch: Vec<StrokePoint>,
 }
@@ -695,14 +696,28 @@ impl DabGenerator {
             walker,
             dual_walker: dual_on.then(|| PathWalker::new(None)),
             builder: DabBuilder::new(&brush),
+            continuous: false,
             dual: dual_on.then(|| DualBuilder::new(&brush)),
             scratch: Vec::new(),
         }
     }
 
+    pub(crate) fn continuous_round_path(mut self) -> Self {
+        self.continuous = self.builder.brush.continuous_round();
+        self
+    }
+
+    pub(crate) fn discrete_dabs(&mut self) {
+        self.continuous = false;
+    }
+
     fn walk(&mut self, pts: &[StrokePoint], dabs: &mut Vec<Dab>, dual: &mut Vec<Dab>) {
         for p in pts {
             let p = apply_pose(&self.builder.brush, *p);
+            if self.continuous {
+                self.builder.build(&StepInput { point: p, direction: 0.0, initial_direction: 0.0, step: 0 }, dabs);
+                continue;
+            }
             let b = &self.builder;
             let len = |q: &StrokePoint| b.step_len(q);
             let mut steps = Vec::new();

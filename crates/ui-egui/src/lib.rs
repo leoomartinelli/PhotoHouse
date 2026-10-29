@@ -1294,6 +1294,7 @@ impl PhotocraftApp {
         let (doc, warnings) = import(name, bytes, max_svg_group_depth)?;
         // The caller records the path it read from.
         self.session.add_document(doc, None);
+        self.ui.tool = state::Tool::Move;
         if let Some(st) = self.session.active_mut() {
             st.source_read_only = photocraft_io::affinity::is_affinity(bytes);
         }

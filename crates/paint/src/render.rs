@@ -457,6 +457,10 @@ impl CoverageMap {
     /// (`c ← c + v·(ceil − c)`). `color` = native colour for per-dab colour. `depth` (Wet Edges, one
     /// value per pixel of `rect`) keeps the deepest any dab reaches each pixel.
     pub fn accumulate(&mut self, rect: Rect, vals: &[f32], ceil: f32, color: Option<&[f32]>, depth: Option<&[f32]>) {
+        self.accumulate_with_union(rect, vals, ceil, color, depth, false);
+    }
+
+    fn accumulate_with_union(&mut self, rect: Rect, vals: &[f32], ceil: f32, color: Option<&[f32]>, depth: Option<&[f32]>, union: bool) {
         if rect.is_empty() {
             return;
         }
@@ -505,7 +509,13 @@ impl CoverageMap {
                             *slot = slot.max(*dv);
                         }
                         let c = tile.cov[ti];
-                        let nv = if ceil > c { c + v * (ceil - c) } else { c };
+                        let nv = if union {
+                            c.max(v * ceil)
+                        } else if ceil > c {
+                            c + v * (ceil - c)
+                        } else {
+                            c
+                        };
                         if nv <= c {
                             continue;
                         }
@@ -603,6 +613,7 @@ pub struct StrokeRenderer {
     dab_buf: Vec<Dab>,
     dual_buf: Vec<Dab>,
     all_dabs: Option<Vec<Dab>>,
+    previous_round: Option<Dab>,
 }
 
 impl StrokeRenderer {
@@ -695,6 +706,7 @@ impl StrokeRenderer {
                         dab_buf: Vec::new(),
                         dual_buf: Vec::new(),
                         all_dabs: None,
+                        previous_round: None,
                     })
                 }
                 Some(m) => {
@@ -735,7 +747,7 @@ impl StrokeRenderer {
         let nc = if per_dab_color { fmt.map_or(0, |f| f.mode.color_channels()) } else { 0 };
         Self {
             ctx: BrushContext::new(brush),
-            generator: DabGenerator::new(brush, zoom),
+            generator: DabGenerator::new(brush, zoom).continuous_round_path(),
             cov: CoverageMap::new(nc),
             dual: brush.dual_brush.enabled.then(|| CoverageMap::new(0)),
             fmt,
@@ -746,11 +758,14 @@ impl StrokeRenderer {
             dab_buf: Vec::new(),
             dual_buf: Vec::new(),
             all_dabs: None,
+            previous_round: None,
         }
     }
 
     /// Keep a copy of every primary dab (for tests and sequential tools).
     pub fn record_dabs(mut self) -> Self {
+        // Sequential tools apply each recorded dab as a separate operation (e.g. replacement).
+        self.generator.discrete_dabs();
         self.all_dabs = Some(Vec::new());
         self
     }
@@ -771,6 +786,10 @@ impl StrokeRenderer {
         let wet = self.ctx.brush.wet_edges;
         let mut native = [0.0f32; 8];
         for d in &dabs {
+            if self.all_dabs.is_none() && self.ctx.brush.continuous_round() {
+                self.raster_round_segment(d);
+                continue;
+            }
             let rect = self.ctx.dab_rect(d, false);
             // Wet Edges acts on the whole stroke (#2088): the dab records how deep it reaches each
             // pixel and the stroke darkens its own rim when composited, not every dab's.
@@ -801,6 +820,56 @@ impl StrokeRenderer {
         duals.clear();
         self.dab_buf = dabs;
         self.dual_buf = duals;
+    }
+
+    /// Union swept discs, minimizing distance minus the linearly interpolated pressure radius.
+    /// Max coverage keeps antialiased edges and opacity independent of event density.
+    fn raster_round_segment(&mut self, d: &Dab) {
+        let a = self.previous_round.unwrap_or(*d);
+        let len = (d.center.x - a.center.x).hypot(d.center.y - a.center.y);
+        if !len.is_finite() {
+            return;
+        }
+        // Bound each raster rectangle even for very sparse diagonal pointer samples.
+        let count = (len / 64.0).ceil().clamp(1.0, 1_000_000.0) as u32;
+        for i in 1..=count {
+            let t = f64::from(i) / f64::from(count);
+            let mut q = *d;
+            q.center.x = a.center.x + (d.center.x - a.center.x) * t;
+            q.center.y = a.center.y + (d.center.y - a.center.y) * t;
+            q.radius = a.radius + (d.radius - a.radius) * t as f32;
+            self.raster_round_piece(&q);
+        }
+    }
+
+    fn raster_round_piece(&mut self, d: &Dab) {
+        let a = self.previous_round.unwrap_or(*d);
+        let rect = self.ctx.dab_rect(&a, false).union(&self.ctx.dab_rect(d, false));
+        let vx = d.center.x - a.center.x;
+        let vy = d.center.y - a.center.y;
+        let len = vx.hypot(vy);
+        let dr = f64::from(d.radius - a.radius);
+        self.scratch.clear();
+        for y in rect.y0..rect.y1 {
+            for x in rect.x0..rect.x1 {
+                let px = f64::from(x) + 0.5 - a.center.x;
+                let py = f64::from(y) + 0.5 - a.center.y;
+                let t = if len <= dr.abs() {
+                    if dr > 0.0 { 1.0 } else { 0.0 }
+                } else {
+                    let along = (px * vx + py * vy) / len;
+                    let perpendicular = (px * vy - py * vx).abs() / len;
+                    ((along + dr * perpendicular / (len * len - dr * dr).sqrt()) / len).clamp(0.0, 1.0)
+                };
+                let dx = px - t * vx;
+                let dy = py - t * vy;
+                let distance = (dx * dx + dy * dy).sqrt();
+                let radius = f64::from(a.radius) + t * dr;
+                self.scratch.push(((radius + 0.5 - distance) as f32).clamp(0.0, 1.0));
+            }
+        }
+        self.cov.accumulate_with_union(rect, &self.scratch, d.opacity, None, None, true);
+        self.previous_round = Some(*d);
     }
 
     /// See [`DabGenerator::wants_time`].
@@ -847,7 +916,18 @@ impl StrokeRenderer {
             return None;
         }
         let mut keys = HashSet::new();
-        for r in dabs.iter().map(|d| self.ctx.dab_rect(d, false)).chain(duals.iter().map(|d| self.ctx.dab_rect(d, true))) {
+        let mut previous = self.previous_round;
+        let primary = dabs.iter().map(|d| {
+            let mut rect = self.ctx.dab_rect(d, false);
+            if self.all_dabs.is_none() && self.ctx.brush.continuous_round() {
+                if let Some(a) = previous {
+                    rect = rect.union(&self.ctx.dab_rect(&a, false));
+                }
+                previous = Some(*d);
+            }
+            rect
+        });
+        for r in primary.chain(duals.iter().map(|d| self.ctx.dab_rect(d, true))) {
             if r.is_empty() {
                 continue;
             }
@@ -875,7 +955,8 @@ impl StrokeRenderer {
             depth_scratch: Vec::new(),
             dab_buf: dabs,
             dual_buf: duals,
-            all_dabs: None,
+            all_dabs: self.all_dabs.as_ref().map(|_| Vec::new()),
+            previous_round: self.previous_round,
         };
         t.raster_pending();
         // Tiles whose coverage the tail doesn't change still composite the same: redraw them all.
