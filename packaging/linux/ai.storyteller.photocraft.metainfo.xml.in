@@ -60,7 +60,7 @@
     <control>tablet</control>
   </supports>
   <provides>
-    <binary>photocraft</binary>
+    <binary>photohouse</binary>
     <mediatype>application/x-photocraft</mediatype>
     <mediatype>image/x-paintnet</mediatype>
     <mediatype>image/openraster</mediatype>

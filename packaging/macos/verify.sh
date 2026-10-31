@@ -37,8 +37,8 @@ case "$ARCH" in
   *) echo "unknown --arch $ARCH" >&2; exit 2 ;;
 esac
 
-DMG="$DIST/photocraft-$VERSION-macos-$ARCH.dmg"
-CLI_ZIP="$DIST/photocraft-cli-$VERSION-macos-$ARCH.zip"
+DMG="$DIST/PhotoHouse-$VERSION-macos-$ARCH.dmg"
+CLI_ZIP="$DIST/PhotoHouse-cli-$VERSION-macos-$ARCH.zip"
 IDENTITY="${MACOS_SIGN_IDENTITY:--}"
 STRICT=0
 if [ "$IDENTITY" != "-" ] && [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then

@@ -20,8 +20,8 @@ install -Dm755 "$HERE/AppRun" "$APPDIR/AppRun"
 install -Dm644 "$HERE/$APP_ID.desktop" "$APPDIR/usr/share/applications/$APP_ID.desktop"
 mkdir -p "$APPDIR/usr/share/icons"
 cp -R "$ROOT/assets/app-icon/hicolor" "$APPDIR/usr/share/icons/"
-printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/photocraft"
-chmod +x "$APPDIR/usr/bin/photocraft"
+printf '#!/bin/sh\necho "stub: $*"\n' >"$APPDIR/usr/bin/photohouse"
+chmod +x "$APPDIR/usr/bin/photohouse"
 
 APPIMAGE="$TMP/photocraft test.AppImage" # spaces on purpose: Exec must stay quoted
 : >"$APPIMAGE"
