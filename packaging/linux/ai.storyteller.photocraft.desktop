@@ -3,8 +3,8 @@ Type=Application
 Name=PhotoHouse
 GenericName=Image Editor
 Comment=Edit photos and layered PSD documents
-Exec=photocraft %F
-TryExec=photocraft
+Exec=photohouse %F
+TryExec=photohouse
 Icon=ai.storyteller.photocraft
 Terminal=false
 # The native runner does not complete desktop startup-notification handshakes.
