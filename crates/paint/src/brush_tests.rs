@@ -1471,3 +1471,88 @@ fn an_aliased_stroke_at_partial_opacity_is_one_flat_colour() {
         assert_eq!(s.rgba(x, 5), first, "pixel {x} of the Pencil line");
     }
 }
+
+// #25: a solid stroke is a swept disc, independently of input event density.
+#[test]
+fn continuous_round_matches_capsule_and_chunking() {
+    for size in [20.0, 100.0, 300.0] {
+        for end in [(400.25, 50.25), (320.25, 270.25)] {
+            let b = BrushSettings { size, pressure_size: false, opacity: 0.4, ..Default::default() };
+            let a = StrokePoint::new(50.25, 50.25, 1.0);
+            let z = StrokePoint::new(end.0, end.1, 1.0);
+            let mut sparse = StrokeRenderer::new(&b, None, 1.0);
+            sparse.push(&[a, z]);
+            sparse.finish();
+            let mut dense = StrokeRenderer::new(&b, None, 1.0);
+            for i in 0..=20 {
+                let t = f64::from(i) / 20.0;
+                dense.push(&[StrokePoint::new(a.x + (z.x - a.x) * t, a.y + (z.y - a.y) * t, 1.0)]);
+            }
+            dense.finish();
+            let vx = z.x - a.x;
+            let vy = z.y - a.y;
+            for y in -110..430 {
+                for x in -110..560 {
+                    let px = f64::from(x) + 0.5 - a.x;
+                    let py = f64::from(y) + 0.5 - a.y;
+                    let t = ((px * vx + py * vy) / (vx * vx + vy * vy)).clamp(0.0, 1.0);
+                    let distance = (px - t * vx).hypot(py - t * vy);
+                    let expected = ((f64::from(size) * 0.5 + 0.5 - distance) as f32).clamp(0.0, 1.0);
+                    assert!((sparse.coverage_at(x, y) - expected).abs() < 1e-5, "{size} {x},{y}");
+                    assert!((sparse.coverage_at(x, y) - dense.coverage_at(x, y)).abs() < 1e-5);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn continuous_round_pressure_and_effect_fallback() {
+    let b = BrushSettings { size: 100.0, ..Default::default() };
+    let mut r = StrokeRenderer::new(&b, None, 1.0);
+    r.push(&[StrokePoint::new(0.0, 0.0, 0.2), StrokePoint::new(200.0, 0.0, 1.0)]);
+    r.finish();
+    for x in 0..200 {
+        assert!(r.coverage_at(x, 0) > 0.99);
+    }
+    assert!(b.continuous_round());
+    assert!(!BrushSettings { spacing: 0.25, ..b.clone() }.continuous_round());
+    assert!(!BrushSettings { flow: 0.5, ..b.clone() }.continuous_round());
+    assert!(!BrushSettings { texture: Texture { enabled: true, ..Default::default() }, ..b }.continuous_round());
+}
+
+#[test]
+fn continuous_live_tail_preserves_coverage_and_opacity() {
+    let b = BrushSettings { size: 40.0, pressure_size: false, opacity: 0.4, smoothing: Smoothing { amount: 0.5, ..Default::default() }, ..Default::default() };
+    let pre = Surface::new(PixelFormat::RGBA32F);
+    let mut r = StrokeRenderer::new(&b, Some(PixelFormat::RGBA32F), 1.0);
+    r.push(&line(40.0, 180.0, 50.0));
+    let mut preview = pre.clone();
+    r.composite(&pre, &mut preview, None, false, true);
+    if let Some(mut tail) = r.tail_preview() {
+        tail.composite(&pre, &mut preview, None, false, true);
+    }
+    r.finish();
+    let mut committed = pre.clone();
+    r.composite(&pre, &mut committed, None, false, true);
+    for y in 20..80 {
+        for x in 10..220 {
+            assert!((preview.rgba(x, y)[3] - committed.rgba(x, y)[3]).abs() < 1e-5);
+            assert!(committed.rgba(x, y)[3] <= 0.40001);
+        }
+    }
+}
+
+#[test]
+fn recording_for_sequential_tools_preserves_discrete_dab_spacing() {
+    let b = BrushSettings { size: 10.0, pressure_size: false, ..Default::default() };
+    let pts = line(0.0, 100.0, 20.0);
+    let expected = dabs_of(&b, &pts);
+    let mut r = StrokeRenderer::new(&b, None, 1.0).record_dabs();
+    r.push(&pts);
+    r.finish();
+    assert_eq!(r.dabs().len(), expected.len());
+    for (got, want) in r.dabs().iter().zip(&expected) {
+        assert_eq!(got.center, want.center);
+    }
+}

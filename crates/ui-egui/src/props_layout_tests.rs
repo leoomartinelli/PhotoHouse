@@ -197,10 +197,10 @@ fn layers_opacity_and_fill_rows_keep_a_gap() {
             PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
             PhotocraftApp::new(s, crate::Services::default())
         });
-        set(&mut h, json!({"dockWidth": dw}));
+        set(&mut h, json!({"theme": "pro", "dockWidth": dw}));
         select(&mut h, layers[0].1);
-        let o = h.query_all_by_label("Opacity:").next().unwrap().rect();
-        let f = h.query_all_by_label("Fill:").next().unwrap().rect();
+        let o = h.get_by_role_and_label(egui::accesskit::Role::Button, "Opacity").rect();
+        let f = h.get_by_role_and_label(egui::accesskit::Role::Button, "Fill").rect();
         // Rows are 24 pt high: centres at least a row plus the gap apart.
         assert!(f.center().y - o.center().y >= 24.0 + crate::theme::ROW_GAP - 0.5, "{dw}: {o:?} {f:?}");
     }

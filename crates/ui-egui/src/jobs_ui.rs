@@ -587,6 +587,7 @@ pub(crate) fn after_open(app: &mut PhotocraftApp, name: &str, path: Option<&str>
     } else {
         notices::io_warnings(app, &opened, warnings);
     }
+    app.ui.tool = crate::state::Tool::Move;
     // Script events bound to "Open Document".
     photocraft_engine::automate_cmds::document_opened(&mut app.session);
     app.sync_views();

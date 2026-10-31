@@ -450,7 +450,7 @@ fn alt_scroll_zooms_while_a_temporary_tool_is_held() {
     assert!((zoom(&h) / z0 - 1.1f32.powi(2)).abs() < 1e-3, "{z0} -> {}", zoom(&h));
     h.event(egui::Event::Key { key: Key::Space, physical_key: None, pressed: false, repeat: false, modifiers: Modifiers::NONE });
     h.run_steps(2);
-    assert_eq!(h.state().ui.tool, crate::state::Tool::Brush);
+    assert_eq!(h.state().ui.tool, crate::state::Tool::Move);
 }
 
 #[test]
@@ -472,6 +472,7 @@ fn type_tool_alt_arrows_kern_the_pair() {
     };
     let steps = |h: &Harness<'static, PhotocraftApp>| h.state().session.active().unwrap().history.entries().len();
     let metric = photocraft_text::shared().lock().unwrap().pair_kerning(&text(&h), 72.0, 0).unwrap().round();
+    h.state_mut().ui.tool = crate::state::Tool::Type;
     h.state_mut().ui.text_edit = Some(crate::state::TextEdit {
         layer: id,
         caret: 1,
@@ -522,6 +523,7 @@ fn type_tool_alt_arrows_kern_the_pair() {
 
 /// Starts a type editing session on `layer` with `anchor..caret` selected.
 fn edit_type(h: &mut Harness<'static, PhotocraftApp>, layer: u64, anchor: usize, caret: usize) {
+    h.state_mut().ui.tool = crate::state::Tool::Type;
     h.state_mut().ui.text_edit = Some(crate::state::TextEdit {
         layer,
         caret,
