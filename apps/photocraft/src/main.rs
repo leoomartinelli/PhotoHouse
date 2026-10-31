@@ -449,6 +449,7 @@ fn main() -> eframe::Result {
             };
             info.canvas = "cpu".into();
             if let Some(rs) = cc.wgpu_render_state.clone() {
+                app.set_viewport_cursor_renderer(&rs);
                 app.perf.gpu_info.set_adapter(&rs.adapter.get_info());
                 let software_window = rs.adapter.get_info().device_type == eframe::wgpu::DeviceType::Cpu;
                 if software_window && mode != photocraft_engine::prefs::RenderingMode::Cpu {

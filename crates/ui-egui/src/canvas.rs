@@ -3746,14 +3746,32 @@ pub fn canvas_view(app: &mut PhotocraftApp, ui: &mut egui::Ui, idx: usize, rect:
                     crate::icons::cursor(ui.ctx(), "mouse-pointer-2", p, vec2(4.0, 4.0) / 24.0, 18.0);
                     egui::CursorIcon::None
                 }
-                SelCursor::Piece => egui::CursorIcon::Default,
                 SelCursor::Cut => {
                     crate::icons::cursor_badge(ui.ctx(), "scissors", p);
                     egui::CursorIcon::Default
                 }
                 SelCursor::Copy => {
-                    crate::icons::cursor_copy_badge(ui.ctx(), p);
-                    egui::CursorIcon::Default
+                    crate::viewport_cursor::show(
+                        &painter,
+                        p,
+                        crate::viewport_cursor::Kind::Copy,
+                        app.viewport_cursor_gpu,
+                    )
+                }
+                SelCursor::Piece => {
+                    let mods = crate::workspace_ui::sticky_mods(app, ui.input(|i| i.modifiers));
+                    crate::viewport_cursor::show(
+                        &painter,
+                        p,
+                        if mods.alt {
+                            crate::viewport_cursor::Kind::Copy
+                        } else if tool == Tool::Move {
+                            crate::viewport_cursor::Kind::Move
+                        } else {
+                            crate::viewport_cursor::Kind::Default
+                        },
+                        app.viewport_cursor_gpu,
+                    )
                 }
             };
             ui.ctx().set_cursor_icon(icon);
@@ -3880,7 +3898,16 @@ pub fn canvas_view(app: &mut PhotocraftApp, ui: &mut egui::Ui, idx: usize, rect:
                 {
                     egui::CursorIcon::Crosshair
                 }
-                Tool::Move => egui::CursorIcon::Move,
+                Tool::Move => crate::viewport_cursor::show(
+                    &painter,
+                    p,
+                    if crate::workspace_ui::sticky_mods(app, ui.input(|i| i.modifiers)).alt {
+                        crate::viewport_cursor::Kind::Copy
+                    } else {
+                        crate::viewport_cursor::Kind::Move
+                    },
+                    app.viewport_cursor_gpu,
+                ),
                 // Dragging is handled with the pan itself, above.
                 Tool::Hand => crate::tool_cursor::hand(ui.ctx(), false),
                 Tool::RotateView => crate::rotate_view::cursor(response.dragged()),
@@ -3900,6 +3927,11 @@ pub fn canvas_view(app: &mut PhotocraftApp, ui: &mut egui::Ui, idx: usize, rect:
                     egui::CursorIcon::None
                 }
                 _ => egui::CursorIcon::Crosshair,
+            };
+            let icon = if icon == egui::CursorIcon::Default {
+                crate::viewport_cursor::show(&painter, p, crate::viewport_cursor::Kind::Default, app.viewport_cursor_gpu)
+            } else {
+                icon
             };
             let icon = visible_crosshair(icon, &painter, p, cfg!(not(target_arch = "wasm32")));
             ui.ctx().set_cursor_icon(icon);

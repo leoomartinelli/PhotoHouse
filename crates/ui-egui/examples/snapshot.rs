@@ -75,6 +75,9 @@ fn main() {
             let mut app = PhotocraftApp::new(photocraft_engine::Session::new(), services);
             app.background_jobs = background_jobs;
             app.custom_titlebar = custom_titlebar;
+            if let Some(rs) = cc.wgpu_render_state.as_ref() {
+                app.set_viewport_cursor_renderer(rs);
+            }
             // `--safe-gpu`: the CPU canvas, as the desktop app's `--safe-gpu` launch.
             if safe_gpu {
                 app.perf.gpu_info.selected = "cpu".into();
