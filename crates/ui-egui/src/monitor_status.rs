@@ -11,7 +11,7 @@
 //! trigger inside that window is deferred, not dropped).
 //!
 //! There is deliberately no periodic re-read (#569 decision): a read costs about 0.2 s of CPU,
-//! and a profile reassigned while PhotoCraft stays in front with no window moving practically
+//! and a profile reassigned while PhotoHouse stays in front with no window moving practically
 //! doesn't happen; it is picked up at the next return to the front or Color Settings.
 
 use std::sync::mpsc::Receiver;
@@ -44,7 +44,7 @@ pub struct State {
     now: bool,
     /// When the last reading started (egui time).
     started: Option<f64>,
-    /// Whether any PhotoCraft window had the focus last frame (macOS reports focus per window:
+    /// Whether any PhotoHouse window had the focus last frame (macOS reports focus per window:
     /// the user can come back to a document window while the main window stays unfocused).
     focused: Option<bool>,
     /// A document window had the focus this frame ([`check_window`]); counted at the next
@@ -124,7 +124,7 @@ fn poll_with_output_name(app: &mut PhotocraftApp, ctx: &egui::Context, output_na
     }
 }
 
-/// A document window's part of [`poll`] (`ctx` draws it): its focus counts as PhotoCraft
+/// A document window's part of [`poll`] (`ctx` draws it): its focus counts as PhotoHouse
 /// being in front, and a display it is on that the last reading didn't know (or whose size
 /// changed) asks for a new reading. Either wakes the main window, whose frame starts the read
 /// (r2: without that, nothing happens until other input arrives).
@@ -218,19 +218,24 @@ pub fn apply(app: &mut PhotocraftApp, r: Detection) {
             })
             .collect()
     };
-    for (id, name, reason) in fallbacks {
-        if app.monitors.reported.iter().any(|(i, r)| *i == id && *r == reason) {
-            continue;
-        }
-        app.monitors.reported.push((id, reason.clone()));
-        let template = if name.is_empty() {
-            "The canvas is shown as sRGB. Choose a monitor profile in Edit › Color Settings."
-        } else {
-            "The canvas on {display} is shown as sRGB. Choose a monitor profile in Edit › Color Settings."
-        };
-        let lines = vec![reason, crate::i18n::fmt(tl!(template), &[("display", &name)])];
-        crate::notices::post(app, FALLBACK_TITLE, lines, true, None);
+    let fresh: Vec<_> = fallbacks.into_iter().filter(|(id, _, reason)| !app.monitors.reported.iter().any(|(i, r)| i == id && r == reason)).collect();
+    if fresh.is_empty() {
+        return;
     }
+    app.monitors.reported.extend(fresh.iter().map(|(id, _, reason)| (*id, reason.clone())));
+    // One notice per reading, not one per display: two profile-less monitors (common on Linux
+    // desks) gave two cards saying the same thing at every launch. Each display keeps its own
+    // reason line; the names share the existing template, so no catalog change is needed.
+    let names: Vec<&str> = fresh.iter().map(|(_, name, _)| name.as_str()).filter(|n| !n.is_empty()).collect();
+    let template = if names.is_empty() {
+        "The canvas is shown as sRGB. Choose a monitor profile in Edit › Color Settings."
+    } else {
+        "The canvas on {display} is shown as sRGB. Choose a monitor profile in Edit › Color Settings."
+    };
+    let advice = crate::i18n::fmt(tl!(template), &[("display", &names.join(", "))]);
+    let mut lines: Vec<String> = fresh.into_iter().map(|(_, _, reason)| reason).collect();
+    lines.push(advice);
+    crate::notices::post(app, FALLBACK_TITLE, lines, true, None);
 }
 
 /// The frame of the window `ctx` draws, in OS points (as `Display::frame`). egui reports it in
@@ -428,6 +433,29 @@ mod tests {
     }
 
     #[test]
+    fn displays_without_profiles_share_one_notice() {
+        // Two profile-less monitors (a Linux desk: DP-4 and DP-5) gave two identical cards.
+        let mut app = app();
+        let desk = |id, name: &str, x| Display { id, name: name.into(), frame: [x, 0.0, 1920.0, 1080.0], profile_name: None, icc: None };
+        apply(&mut app, Ok(vec![desk(1, "DP-4", 0.0), desk(2, "DP-5", 1920.0)]));
+        assert_eq!(app.ui.notices.len(), 1);
+        let lines = &app.ui.notices[0].lines;
+        assert_eq!(lines[0], "DP-4 has no ICC profile");
+        assert_eq!(lines[1], "DP-5 has no ICC profile");
+        assert!(lines[2].starts_with("The canvas on DP-4, DP-5 is shown as sRGB."), "{lines:?}");
+        // The same reading again: nothing new to say.
+        apply(&mut app, Ok(vec![desk(1, "DP-4", 0.0), desk(2, "DP-5", 1920.0)]));
+        assert_eq!(app.ui.notices.len(), 1);
+        // A third display plugged in later: a card for it alone.
+        apply(&mut app, Ok(vec![desk(1, "DP-4", 0.0), desk(2, "DP-5", 1920.0), desk(3, "HDMI-A-1", 3840.0)]));
+        assert_eq!(app.ui.notices.len(), 2);
+        let lines = &app.ui.notices[1].lines;
+        assert_eq!(lines.len(), 2);
+        assert_eq!(lines[0], "HDMI-A-1 has no ICC profile");
+        assert!(lines[1].starts_with("The canvas on HDMI-A-1 is shown"), "{lines:?}");
+    }
+
+    #[test]
     fn displays_are_read_again_when_they_may_have_changed() {
         let mut app = app();
         let ctx = egui::Context::default();
@@ -519,7 +547,7 @@ mod tests {
         app.session.color.set_displays(Ok(displays(p3())));
         let reads = reader(&mut app, displays(p3()));
         let count = || reads.load(std::sync::atomic::Ordering::SeqCst);
-        // Working in the document window: PhotoCraft is in front, no reading.
+        // Working in the document window: PhotoHouse is in front, no reading.
         for _ in 0..3 {
             doc_window(&mut app, &doc, [100.0, 100.0], true);
         }
@@ -527,7 +555,7 @@ mod tests {
         doc_window(&mut app, &doc, [100.0, 100.0], true);
         frame(&mut app, &main, 101.0, [100.0, 100.0], [1728.0, 1117.0], false);
         assert_eq!(count(), 0);
-        // Another app in front: no PhotoCraft window has the focus.
+        // Another app in front: no PhotoHouse window has the focus.
         doc_window(&mut app, &doc, [100.0, 100.0], false);
         frame(&mut app, &main, 102.0, [100.0, 100.0], [1728.0, 1117.0], false);
         frame(&mut app, &main, 150.0, [100.0, 100.0], [1728.0, 1117.0], false);

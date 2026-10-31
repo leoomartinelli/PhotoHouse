@@ -36,6 +36,7 @@
           <File Source="$(var.SourceDir)\assets\fonts\OFL-JetBrainsMono.txt" />
           <File Source="$(var.SourceDir)\assets\icons\LICENSE-lucide.txt" />
           <File Source="$(var.SourceDir)\assets\dict\LICENSE-SCOWL.txt" />
+          <?include $(var.FontLicensesInclude) ?>
         </Component>
       </Directory></Directory></Directory>
       <Directory Id="ProgramMenuFolder" />

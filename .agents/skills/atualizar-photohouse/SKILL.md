@@ -13,8 +13,8 @@ Os comandos abaixo são executados na raiz do clone, sem caminhos absolutos.
 ## 1. Confirmar escopo e inventariar a base
 
 Respeite o escopo autorizado no chat. Planejar ou criar uma issue não autoriza
-iniciar o merge. Para uma versão pedida, use a tag correspondente; na issue #2,
-o alvo planejado é `v0.9.0`, não o estado mais recente de `main`.
+iniciar o merge. Para uma versão pedida, use a tag correspondente; como exemplo, nesta sincronização,
+o alvo planejado é `v0.18.0`, não o estado mais recente de `main`.
 
 ```powershell
 git status --short
@@ -24,7 +24,7 @@ git rev-parse HEAD
 ```
 
 Verifique a base House aprovada e a situação de PRs anteriores. Use branch
-própria conforme `CONTRIBUTING.md`, por exemplo `chore/update-photohouse-v0.9.0`.
+própria conforme `CONTRIBUTING.md`, por exemplo `chore/update-photohouse-v0.18.0`.
 Não misture alterações de terceiros ou arquivos locais num `git add -A` cego.
 Se houver trabalho pendente, preserve-o por backup ou commit selecionado,
 de acordo com a autorização e as verificações exigidas pelo projeto.
@@ -39,14 +39,14 @@ reproduzíveis e capturas da versão atual para comparação.
 
 ## 2. Buscar e comparar a versão exata
 
-Confira que o remoto `upstream` aponta para o PhotoCraft oficial. Para v0.9.0:
+Confira que o remoto `upstream` aponta para o PhotoCraft oficial. Para v0.18.0:
 
 ```powershell
-git fetch upstream tag v0.9.0
-git rev-parse 'v0.9.0^{commit}'
-git merge-base HEAD v0.9.0
-git log --oneline HEAD..v0.9.0
-git diff --stat HEAD...v0.9.0
+git fetch upstream tag v0.18.0
+git rev-parse 'v0.18.0^{commit}'
+git merge-base HEAD v0.18.0
+git log --oneline HEAD..v0.18.0
+git diff --stat HEAD...v0.18.0
 ```
 
 Registre o SHA completo, o ancestral comum e as mudanças relevantes. Diferencie
@@ -61,7 +61,7 @@ Quando a implementação estiver autorizada, inicie a integração sem criar o
 commit automaticamente, permitindo revisar e validar o resultado:
 
 ```powershell
-git merge --no-ff --no-commit v0.9.0
+git merge --no-ff --no-commit v0.18.0
 ```
 
 Pare para inspecionar o resultado e eventuais conflitos. Preserve a lógica nova
@@ -114,7 +114,7 @@ cargo clippy --locked -p photocraft-algo -p photocraft-engine -p photocraft-ui-e
 cargo xtask layers
 cargo xtask wasm
 cargo test --locked -p photocraft-engine --test panic_hunt -- --ignored
-cargo build --locked --release -p photocraft -p photocraft-cli
+cargo build --locked --release -p photocraft -p photocraft-cli --features heif
 ```
 
 Amplie para crates e corpora afetados e execute as verificações condicionais de
@@ -132,7 +132,7 @@ de UX que alterem o fluxo existente.
 
 Registre comandos, resultados e limitações; diferencie falhas preexistentes.
 Somente após as verificações selecione os arquivos e finalize o commit com
-prefixo House, por exemplo `CHORE: integra PhotoCraft v0.9.0 no PhotoHouse`.
+prefixo House, por exemplo `CHORE: integra PhotoCraft v0.18.0 no PhotoHouse`.
 Não finalize um merge sem checar se ele ainda está em andamento.
 
 ## 5. Validar o instalador e revisar

@@ -8,6 +8,10 @@ Tema escuro com verde da marca `#6FCF68`, mascote na tela inicial, instalador of
 para Windows e integração do efeito Liquid Glass com filtros inteligentes.
 O projeto está em desenvolvimento; consulte as limitações em [docs/gaps.md](docs/gaps.md).
 
+A sincronização da base PhotoCraft para `v0.18.0` mantém as personalizações da
+House. Origem, adaptações e verificações estão em
+[docs/atualizacao-v0.18.0.md](docs/atualizacao-v0.18.0.md).
+
 ## Compilar e executar
 
 Use Rust estável (mínimo 1.95). No Windows, instale Visual Studio Build Tools
@@ -27,8 +31,8 @@ com o upstream. Dependências Git estão fixadas por revisão; a primeira compil
 
 Os nomes técnicos abaixo correspondem ao catálogo de ferramentas do editor.
 
-<h4>🧰 67 tools</h4>
-Move · Artboard · Rectangular and Elliptical Marquee · Single Row Marquee · Single Column Marquee · Lasso · Polygonal Lasso · Magnetic Lasso · Object Selection · Quick Selection · Magic Wand · Crop · Perspective Crop · Slice · Slice Select · Frame · Eyedropper · Color Sampler · Ruler · Note · Count · Remove · Spot Healing Brush · Healing Brush · Patch · Content-Aware Move · Red Eye · Brush · Pencil · Mixer Brush · Color Replacement · Clone Stamp · Pattern Stamp · History Brush · Eraser · Background Eraser · Magic Eraser · Gradient · Paint Bucket · Blur · Sharpen · Smudge · Dodge · Burn · Sponge · Pen · Freeform Pen · Curvature Pen · Add Anchor Point · Delete Anchor Point · Convert Point · Horizontal and Vertical Type · Horizontal and Vertical Type Mask · Path Selection · Direct Selection · Rectangle · Ellipse · Triangle · Polygon · Line · Custom Shape · Hand · Rotate View · Zoom
+<h4>🧰 68 tools</h4>
+Move · Artboard · Rectangular and Elliptical Marquee · Single Row Marquee · Single Column Marquee · Lasso · Polygonal Lasso · Magnetic Lasso · Object Selection · Quick Selection · Magic Wand · Crop · Perspective Crop · Slice · Slice Select · Frame · Eyedropper · Color Sampler · Ruler · Note · Count · Remove · Spot Healing Brush · Healing Brush · Patch · Content-Aware Move · Red Eye · Brush · Pencil · Mixer Brush · Color Replacement · Clone Stamp · Pattern Stamp · History Brush · Art History Brush · Eraser · Background Eraser · Magic Eraser · Gradient · Paint Bucket · Blur · Sharpen · Smudge · Dodge · Burn · Sponge · Pen · Freeform Pen · Curvature Pen · Add Anchor Point · Delete Anchor Point · Convert Point · Horizontal and Vertical Type · Horizontal and Vertical Type Mask · Path Selection · Direct Selection · Rectangle · Ellipse · Triangle · Polygon · Line · Custom Shape · Hand · Rotate View · Zoom
 
 ## Verificar
 

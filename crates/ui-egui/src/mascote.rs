@@ -120,7 +120,7 @@ struct Textures {
 /// rasterizes again only every ~9 %.
 fn textures(ctx: &Context, px_per_unit: f32) -> Option<Vec<TextureHandle>> {
     let step = 2f32.powf((px_per_unit.max(1e-4).log2() * 8.0).ceil() / 8.0);
-    let id = Id::new("photohouse-mascote-texturas");
+    let id = Id::unique("photohouse-mascote-texturas");
     if let Some(t) = ctx.data(|d| d.get_temp::<Textures>(id))
         && t.px_per_unit == step
     {
@@ -243,7 +243,7 @@ mod tests {
     #[test]
     fn rasterizes_once_then_only_moves_quads_and_the_eyes_turn_to_the_pointer() {
         let ctx = Context::default();
-        let id = Id::new("mascote-test");
+        let id = Id::unique("mascote-test");
         let rect = Rect::from_min_size(Pos2::ZERO, vec2(200.0, 200.0 * ASPECT));
         let frame = |pointer: Option<Pos2>| {
             let mut input = egui::RawInput::default();

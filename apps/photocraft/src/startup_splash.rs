@@ -143,7 +143,7 @@ impl eframe::App for Splash {
 
     fn ui(&mut self, ui: &mut egui::Ui, _: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
-        self.collect_captures(&ctx);
+
         if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
             return;
@@ -152,7 +152,7 @@ impl eframe::App for Splash {
         let state = progress(elapsed);
         let rect = ui.max_rect();
         self.paint(ui, rect, &state);
-        if ui.interact(rect, egui::Id::new("splash-drag"), egui::Sense::drag()).drag_started() {
+        if ui.interact(rect, egui::Id::unique("splash-drag"), egui::Sense::drag()).drag_started() {
             ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
         }
         self.request_capture(&ctx, state.percent);
@@ -220,39 +220,26 @@ impl Splash {
                 && !*requested
             {
                 *requested = true;
-                ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(egui::UserData::new(threshold)));
+                ctx.send_viewport_cmd(egui::ViewportCommand::Screenshot(egui::ScreenshotCallback::new(move |image| {
+                    save_capture(threshold, &image);
+                })));
             }
         }
     }
+}
 
-    fn collect_captures(&self, ctx: &egui::Context) {
-        let Some(dir) = std::env::var_os("PHOTOHOUSE_SPLASH_CAPTURE_DIR").map(std::path::PathBuf::from) else { return };
-        let captures: Vec<_> = ctx.input(|i| {
-            i.raw
-                .events
-                .iter()
-                .filter_map(|event| {
-                    if let egui::Event::Screenshot { user_data, image, .. } = event {
-                        Some((*user_data.data.as_ref()?.downcast_ref::<u32>()?, image.clone()))
-                    } else {
-                        None
-                    }
-                })
-                .collect()
-        });
-        for (percent, image) in captures {
-            let result = (|| -> Result<(), String> {
-                let rgba: Vec<u8> = image.pixels.iter().flat_map(|p| p.to_array()).collect();
-                let raw = photocraft_codecs::Image::from_u8(image.width() as u32, image.height() as u32, photocraft_codecs::ChannelLayout::Rgba, rgba)
-                    .map_err(|e| e.to_string())?;
-                let bytes = photocraft_codecs::encode(&raw, photocraft_codecs::Format::Png, &Default::default()).map_err(|e| e.to_string())?;
-                std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-                std::fs::write(dir.join(format!("splash-{percent:03}.png")), bytes).map_err(|e| e.to_string())
-            })();
-            if let Err(error) = result {
-                log::warn!("PhotoHouse startup capture: {error}");
-            }
-        }
+fn save_capture(percent: u32, image: &egui::ColorImage) {
+    let Some(dir) = std::env::var_os("PHOTOHOUSE_SPLASH_CAPTURE_DIR").map(std::path::PathBuf::from) else { return };
+    let result = (|| -> Result<(), String> {
+        let rgba: Vec<u8> = image.pixels.iter().flat_map(|p| p.to_array()).collect();
+        let raw = photocraft_codecs::Image::from_u8(image.width() as u32, image.height() as u32, photocraft_codecs::ChannelLayout::Rgba, rgba)
+            .map_err(|e| e.to_string())?;
+        let bytes = photocraft_codecs::encode(&raw, photocraft_codecs::Format::Png, &Default::default()).map_err(|e| e.to_string())?;
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        std::fs::write(dir.join(format!("splash-{percent:03}.png")), bytes).map_err(|e| e.to_string())
+    })();
+    if let Err(error) = result {
+        log::warn!("PhotoHouse startup capture: {error}");
     }
 }
 

@@ -147,13 +147,17 @@ pub(crate) fn install(rs: &RenderState) -> bool {
     true
 }
 
+pub(crate) fn show_move(painter: &Painter, at: Pos2, copying: bool, gpu: bool) -> CursorIcon {
+    show(painter, at, if copying { Kind::Copy } else { Kind::Move }, gpu)
+}
+
 pub(crate) fn show(painter: &Painter, at: Pos2, kind: Kind, gpu: bool) -> CursorIcon {
     let (_, size, hotspot) = kind.asset();
     let scale = 26.0 / 512.0;
     let rect = Rect::from_min_size(at - vec2(hotspot[0], hotspot[1]) * scale, vec2(size[0], size[1]) * scale);
     if !gpu {
         // Non-wgpu hosts retain the supplied artwork and a visible pointer.
-        let id = egui::Id::new(("viewport-cursor-fallback", kind.index()));
+        let id = egui::Id::unique(("viewport-cursor-fallback", kind.index()));
         let cached = painter.ctx().data(|d| d.get_temp::<egui::TextureHandle>(id));
         let texture = if let Some(texture) = cached {
             texture

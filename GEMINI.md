@@ -27,8 +27,8 @@ Todos os caminhos partem da raiz deste repositório; nenhum depende de uma pasta
 de Downloads ou de uma instalação local específica.
 
 Quando o usuário pedir uma versão, fixe a integração na tag e registre seu SHA.
-Para o planejamento da [issue #2](https://github.com/HOUSE-DE-CRIATIVIDADE/PhotoHouse/issues/2),
-o alvo é `v0.9.0`. Não substitua esse alvo por `upstream/main`.
+Na sincronização de 31/10/2026, o alvo solicitado é `v0.18.0`.
+Não substitua esse alvo por `upstream/main`.
 
 Respeite a etapa autorizada: um pedido de planejamento não inicia atualização.
 Após alinhamento, trabalhe em branch própria, preserve o trabalho local e

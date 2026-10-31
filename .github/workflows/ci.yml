@@ -55,9 +55,18 @@ jobs:
       CARGO_INCREMENTAL: "0"
       CARGO_PROFILE_DEV_DEBUG: "0"
       CARGO_PROFILE_TEST_DEBUG: "0"
+      CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+      CRAFT_FONTS_REQUIRED: "1"
     steps:
       - uses: actions/checkout@v4
         with:
+          persist-credentials: false
+      - name: Fontes oficiais para os testes de idiomas
+        uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          ref: aced4137c022f1f587624d48e81ec77e1914a9cc
+          path: craft-fonts
           persist-credentials: false
       - name: Liberar disco no Linux
         if: runner.os == 'Linux'

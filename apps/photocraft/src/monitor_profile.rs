@@ -10,7 +10,7 @@
 //! by the exact `XRANDR_name` metadata; cloned outputs get a profile only when every output has
 //! the same ICC bytes. Native Wayland, including Xwayland windows opened from a Wayland session,
 //! reports no display profiles: eframe/winit has no safe way to set the app surface's Wayland
-//! image description, so applying the output ICC in PhotoCraft could double-transform it.
+//! image description, so applying the output ICC in PhotoHouse could double-transform it.
 //! Other platforms report no displays (sRGB, or the profile chosen in Color Settings).
 
 use std::sync::mpsc::Receiver;
@@ -495,6 +495,7 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn a_hung_helper_is_stopped_and_big_replies_dont_block() {
+        let _spawns = crate::CHILD_SPAWNS.read().unwrap_or_else(std::sync::PoisonError::into_inner);
         let t0 = std::time::Instant::now();
         let e = run_helper(std::process::Command::new("sleep").arg("30"), std::time::Duration::from_millis(300)).unwrap_err();
         assert!(e.contains("took longer than"), "{e}");
