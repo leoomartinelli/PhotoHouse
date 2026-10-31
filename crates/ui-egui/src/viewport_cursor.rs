@@ -301,4 +301,41 @@ mod tests {
         assert_ne!(h.output().platform_output.cursor_icon, CursorIcon::None);
         assert!(h.output().platform_output.cursor_image.is_none());
     }
+
+    #[test]
+    fn selection_cursors_preserve_cut_outline_and_use_viewport_for_piece_and_copy() {
+        let _gpu = photocraft_testkit::gpu_lock();
+        use egui::{Event, Modifiers};
+        let mut h = egui_kittest::Harness::builder().with_size(vec2(800.0, 600.0)).with_max_steps(64).wgpu().build_eframe(|cc| {
+            crate::PhotocraftApp::setup_context(&cc.egui_ctx, Default::default());
+            let mut app = crate::PhotocraftApp::new(photocraft_engine::Session::new(), Default::default());
+            app.set_wgpu(cc.wgpu_render_state.clone().unwrap());
+            app.run("file.new", serde_json::json!({"width": 200, "height": 200})).unwrap();
+            app.session.prefs.edit(|p| p.cursors.other = photocraft_engine::prefs::OtherCursor::Standard);
+            app.run("select.all", serde_json::json!({})).unwrap();
+            app.ui.tool = crate::Tool::Move;
+            app
+        });
+        h.run_steps(4);
+        let at = h.state().last_canvas_rect.center();
+        h.event(Event::PointerMoved(at));
+        h.run_steps(4);
+        // Over a selection with Move tool: Cut state shows Default cursor (with scissors badge), not the viewport Move cursor.
+        assert_eq!(h.output().platform_output.cursor_icon, CursorIcon::Default);
+
+        // Alt modifier turns it into Copy state: viewport cursor is used (CursorIcon::None).
+        h.event(Event::ModifiersChanged(Modifiers::ALT));
+        h.run_steps(4);
+        assert_eq!(h.output().platform_output.cursor_icon, CursorIcon::None);
+
+        // Reset modifiers: back to Cut (Default).
+        h.event(Event::ModifiersChanged(Modifiers::NONE));
+        h.run_steps(4);
+        assert_eq!(h.output().platform_output.cursor_icon, CursorIcon::Default);
+
+        // RectMarquee inside selection gives Outline: Move cursor.
+        h.state_mut().ui.tool = crate::Tool::RectMarquee;
+        h.run_steps(4);
+        assert_eq!(h.output().platform_output.cursor_icon, CursorIcon::Move);
+    }
 }

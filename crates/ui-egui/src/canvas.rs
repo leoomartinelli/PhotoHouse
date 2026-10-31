@@ -3739,37 +3739,39 @@ pub fn canvas_view(app: &mut PhotocraftApp, ui: &mut egui::Ui, idx: usize, rect:
             // outline (#1428), the arrow with a badge for what a press does to the selected
             // pixels, a hollow arrowhead while they are dragged, a plain arrow over a floating
             // piece.
-            let icon = if tool == Tool::Move || c == SelCursor::Copy || c == SelCursor::Piece {
-                let mods = crate::workspace_ui::sticky_mods(app, ui.input(|i| i.modifiers));
-                crate::viewport_cursor::show(
-                    &painter,
-                    p,
-                    if mods.alt || c == SelCursor::Copy {
-                        crate::viewport_cursor::Kind::Copy
-                    } else if tool == Tool::Move {
-                        crate::viewport_cursor::Kind::Move
-                    } else {
-                        crate::viewport_cursor::Kind::Default
-                    },
-                    app.viewport_cursor_gpu,
-                )
-            } else {
-                match c {
-                    SelCursor::Outline => egui::CursorIcon::Move,
-                    SelCursor::Dragging => {
-                        // The tip of the arrowhead is at (4, 4) of its 24-unit box.
-                        crate::icons::cursor(ui.ctx(), "mouse-pointer-2", p, vec2(4.0, 4.0) / 24.0, 18.0);
-                        egui::CursorIcon::None
-                    }
-                    SelCursor::Piece => egui::CursorIcon::Default,
-                    SelCursor::Cut => {
-                        crate::icons::cursor_badge(ui.ctx(), "scissors", p);
-                        egui::CursorIcon::Default
-                    }
-                    SelCursor::Copy => {
-                        crate::icons::cursor_copy_badge(ui.ctx(), p);
-                        egui::CursorIcon::Default
-                    }
+            let icon = match c {
+                SelCursor::Outline => egui::CursorIcon::Move,
+                SelCursor::Dragging => {
+                    // The tip of the arrowhead is at (4, 4) of its 24-unit box.
+                    crate::icons::cursor(ui.ctx(), "mouse-pointer-2", p, vec2(4.0, 4.0) / 24.0, 18.0);
+                    egui::CursorIcon::None
+                }
+                SelCursor::Cut => {
+                    crate::icons::cursor_badge(ui.ctx(), "scissors", p);
+                    egui::CursorIcon::Default
+                }
+                SelCursor::Copy => {
+                    crate::viewport_cursor::show(
+                        &painter,
+                        p,
+                        crate::viewport_cursor::Kind::Copy,
+                        app.viewport_cursor_gpu,
+                    )
+                }
+                SelCursor::Piece => {
+                    let mods = crate::workspace_ui::sticky_mods(app, ui.input(|i| i.modifiers));
+                    crate::viewport_cursor::show(
+                        &painter,
+                        p,
+                        if mods.alt {
+                            crate::viewport_cursor::Kind::Copy
+                        } else if tool == Tool::Move {
+                            crate::viewport_cursor::Kind::Move
+                        } else {
+                            crate::viewport_cursor::Kind::Default
+                        },
+                        app.viewport_cursor_gpu,
+                    )
                 }
             };
             ui.ctx().set_cursor_icon(icon);
