@@ -1,0 +1,138 @@
+# Instaladores
+# Compila o PhotoHouse para Linux, macOS e Windows e anexa os instaladores à release.
+# Roda chamado pelo workflow Versão (quando ele cria uma release) ou à mão, informando a tag.
+# Sem certificados: os pacotes de macOS e Windows saem sem assinatura da Apple/Microsoft.
+
+name: Instaladores
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag da release, ex.: v0.8.3"
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da release, ex.: v0.8.3"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instaladores-${{ inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ inputs.tag }}
+  GH_TOKEN: ${{ github.token }}
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-22.04 # glibc antiga: o AppImage roda nas distros mais novas
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - name: Script de upload da versão atual do workflow
+        shell: bash
+        run: git checkout "$GITHUB_SHA" -- .github/scripts
+      - name: Liberar disco
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - name: Dependências
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxi-dev libxrandr-dev libxcursor-dev libxinerama-dev \
+            libxkbcommon-dev libwayland-dev libgl1-mesa-dev libudev-dev libfontconfig1-dev libgtk-3-dev \
+            nfpm zsync desktop-file-utils
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: instaladores
+      - name: Empacotar
+        run: |
+          export PHOTOCRAFT_VERSION="${TAG#v}"
+          packaging/linux/package.sh
+      - name: Anexar à release
+        run: .github/scripts/anexar.sh dist/release
+
+  macos:
+    name: macOS
+    runs-on: macos-14
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - name: Script de upload da versão atual do workflow
+        shell: bash
+        run: git checkout "$GITHUB_SHA" -- .github/scripts
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: instaladores
+      - name: Empacotar (universal, assinatura ad-hoc)
+        run: |
+          export PHOTOCRAFT_VERSION="${TAG#v}"
+          packaging/macos/package.sh --arch universal
+      - name: Anexar à release
+        run: .github/scripts/anexar.sh dist/release
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - name: Script de upload da versão atual do workflow
+        shell: bash
+        run: git checkout "$GITHUB_SHA" -- .github/scripts
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: instaladores
+          workspaces: |
+            .
+            packaging/windows/photohouse-setup -> ../../../target/photohouse-setup
+      - name: Compilar editor e CLI
+        run: cargo build --release --locked -p photocraft -p photocraft-cli --features heif
+      - name: Preparar binários e WiX 3.14.1
+        run: |
+          $bin = "$env:RUNNER_TEMP/bin"
+          New-Item -ItemType Directory -Force $bin | Out-Null
+          Copy-Item target/release/photocraft.exe "$bin/PhotoHouse.exe"
+          Copy-Item target/release/photocraft-cli.exe "$bin/photocraft-cli.exe"
+          $wix = "$env:RUNNER_TEMP/wix"
+          Invoke-WebRequest https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip -OutFile "$env:RUNNER_TEMP/wix.zip"
+          Expand-Archive "$env:RUNNER_TEMP/wix.zip" -DestinationPath $wix
+          # A versão do instalador acompanha a tag da release.
+          $v = "$env:TAG".TrimStart('v')
+          (Get-Content packaging/windows/build-photohouse.ps1 -Raw) -replace "\`$version = '[^']+'", "`$`$version = '$v'" | Set-Content packaging/windows/build-photohouse.ps1 -NoNewline
+          (Get-Content packaging/windows/photohouse-setup/src/main.rs -Raw) -replace 'PHOTOHOUSE  /  [0-9.]+', "PHOTOHOUSE  /  $v" | Set-Content packaging/windows/photohouse-setup/src/main.rs -NoNewline
+          cargo fetch --locked --manifest-path packaging/windows/photohouse-setup/Cargo.toml
+      - name: Montar instalador
+        run: ./packaging/windows/build-photohouse.ps1 -BinDir "$env:RUNNER_TEMP/bin" -WixDir "$env:RUNNER_TEMP/wix" -OutputDir dist/windows
+      - name: Anexar à release
+        shell: bash
+        run: |
+          mkdir -p dist/upload
+          cp dist/windows/PhotoHouse-*.exe dist/windows/PhotoHouse-*.msi dist/upload/
+          (cd "$RUNNER_TEMP/bin" && 7z a "$GITHUB_WORKSPACE/dist/upload/PhotoHouse-${TAG#v}-windows-x64-portatil.zip" PhotoHouse.exe photocraft-cli.exe)
+          .github/scripts/anexar.sh dist/upload

@@ -27,6 +27,9 @@ jobs:
   versao:
     name: Versão
     runs-on: ubuntu-latest
+    outputs:
+      publicar: ${{ steps.calcular.outputs.publicar }}
+      tag: ${{ steps.calcular.outputs.tag }}
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -134,3 +137,12 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "${{ steps.calcular.outputs.tag }}" \
             --generate-notes
+
+  # Release criada pelo GITHUB_TOKEN não dispara outros workflows, então os instaladores são chamados daqui.
+  instaladores:
+    name: Instaladores
+    needs: versao
+    if: needs.versao.outputs.publicar == 'sim'
+    uses: ./.github/workflows/instaladores.yml
+    with:
+      tag: ${{ needs.versao.outputs.tag }}
