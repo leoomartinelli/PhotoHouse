@@ -223,6 +223,7 @@ mod type_transform;
 mod variables_ui;
 pub mod vector_ui;
 pub mod view_cmds;
+mod viewport_cursor;
 pub mod vp_ui;
 pub mod warp_preview;
 pub mod wheel_nav;
@@ -728,6 +729,7 @@ pub struct PhotocraftApp {
     /// GPU canvas renderer, when running on the wgpu backend (see [`Self::set_wgpu`]). Dropped
     /// for the rest of the session when the device is lost (see `gpu_status`).
     gpu: Option<gpu_canvas::GpuCanvas>,
+    viewport_cursor_gpu: bool,
     /// Run once the first frames have rendered (see [`Self::on_started`]).
     started: Option<gpu_status::StartedHook>,
     /// Frame and canvas-upload timings (exposed via `ui.inspect`).
@@ -875,6 +877,7 @@ impl PhotocraftApp {
             doc_hist: None,
             hist_job: None,
             gpu: None,
+            viewport_cursor_gpu: false,
             started: None,
             perf: Default::default(),
             prefs_rt: Default::default(),
@@ -901,9 +904,20 @@ impl PhotocraftApp {
         app
     }
 
+    /// Enable Difference viewport pointers independently of the document compositor.
+    pub fn set_viewport_cursor_renderer(&mut self, rs: &eframe::egui_wgpu::RenderState) {
+        if !self.viewport_cursor_gpu {
+            self.viewport_cursor_gpu = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| crate::viewport_cursor::install(rs))).unwrap_or_else(|_| {
+                log::warn!("Viewport cursor GPU setup failed; retaining visible SVG pointers");
+                false
+            });
+        }
+    }
+
     /// Draw the document canvas on the GPU (custom WGSL shader) instead of via egui textures.
     /// Call from the app creator with `cc.wgpu_render_state`; without it the CPU path is used.
     pub fn set_wgpu(&mut self, rs: eframe::egui_wgpu::RenderState) {
+        self.set_viewport_cursor_renderer(&rs);
         // Preferences › Performance › cache tile size (PHOTOCRAFT_GPU_TILE still overrides).
         let tile = self.session.prefs().performance.cache_tile_size;
         // Escaped driver/setup panics must leave the session and CPU canvas alive.

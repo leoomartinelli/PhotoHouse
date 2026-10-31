@@ -399,7 +399,7 @@ fn brush_hover_uses_an_os_bitmap_that_survives_motion_but_not_tool_or_panel_chan
     h.state_mut().run("prefs.set", json!({"path": "cursors.painting", "value": "standard"})).unwrap();
     h.run_steps(2);
     assert!(h.output().platform_output.cursor_image.is_none());
-    assert_eq!(h.output().platform_output.cursor_icon, CursorIcon::Default);
+    assert_eq!(h.output().platform_output.cursor_icon, CursorIcon::None, "Standard uses the PhotoHouse viewport arrow instead of the OS pointer");
 }
 
 #[test]
