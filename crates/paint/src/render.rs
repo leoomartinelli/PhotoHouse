@@ -825,47 +825,94 @@ impl StrokeRenderer {
     /// Union swept discs, minimizing distance minus the linearly interpolated pressure radius.
     /// Max coverage keeps antialiased edges and opacity independent of event density.
     fn raster_round_segment(&mut self, d: &Dab) {
-        let a = self.previous_round.unwrap_or(*d);
-        let len = (d.center.x - a.center.x).hypot(d.center.y - a.center.y);
-        if !len.is_finite() {
-            return;
-        }
-        // Bound each raster rectangle even for very sparse diagonal pointer samples.
-        let count = (len / 64.0).ceil().clamp(1.0, 1_000_000.0) as u32;
-        for i in 1..=count {
-            let t = f64::from(i) / f64::from(count);
-            let mut q = *d;
-            q.center.x = a.center.x + (d.center.x - a.center.x) * t;
-            q.center.y = a.center.y + (d.center.y - a.center.y) * t;
-            q.radius = a.radius + (d.radius - a.radius) * t as f32;
-            self.raster_round_piece(&q);
-        }
+        self.raster_round_piece(d);
     }
 
     fn raster_round_piece(&mut self, d: &Dab) {
         let a = self.previous_round.unwrap_or(*d);
         let rect = self.ctx.dab_rect(&a, false).union(&self.ctx.dab_rect(d, false));
+        if rect.is_empty() {
+            self.previous_round = Some(*d);
+            return;
+        }
         let vx = d.center.x - a.center.x;
         let vy = d.center.y - a.center.y;
-        let len = vx.hypot(vy);
+        let len_sq = vx * vx + vy * vy;
+        let len = len_sq.sqrt();
+        if !len.is_finite() {
+            self.previous_round = Some(*d);
+            return;
+        }
         let dr = f64::from(d.radius - a.radius);
+        let r_max = f64::from(a.radius.max(d.radius)) + 0.5;
+        let inv_len_sq = if len_sq > 0.0 { 1.0 / len_sq } else { 0.0 };
+        let k = if len > dr.abs() && dr != 0.0 { dr / (len_sq * (len_sq - dr * dr).sqrt()) } else { 0.0 };
+        let fixed_t = if dr > 0.0 { 1.0 } else { 0.0 };
+        let len_le_dr = len <= dr.abs();
+
+        let w = (rect.x1 - rect.x0) as usize;
+        let h = (rect.y1 - rect.y0) as usize;
         self.scratch.clear();
+        self.scratch.resize(w * h, 0.0);
+
         for y in rect.y0..rect.y1 {
-            for x in rect.x0..rect.x1 {
+            let py = f64::from(y) + 0.5 - a.center.y;
+            let (x_start, x_end) = if len == 0.0 || vy.abs() < 1e-6 {
+                if py.abs() > r_max {
+                    continue;
+                }
+                let x_min = (a.center.x.min(d.center.x) - r_max).floor() as i32;
+                let x_max = (a.center.x.max(d.center.x) + r_max).ceil() as i32;
+                (x_min.max(rect.x0), x_max.min(rect.x1))
+            } else {
+                let t_a = (py - r_max) / vy;
+                let t_b = (py + r_max) / vy;
+                let t_min = t_a.min(t_b);
+                let t_max = t_a.max(t_b);
+                if t_max < 0.0 || t_min > 1.0 {
+                    continue;
+                }
+                let t_lo = t_min.max(0.0);
+                let t_hi = t_max.min(1.0);
+                let x_a = a.center.x + t_lo * vx;
+                let x_b = a.center.x + t_hi * vx;
+                let x_min = (x_a.min(x_b) - r_max).floor() as i32;
+                let x_max = (x_a.max(x_b) + r_max).ceil() as i32;
+                (x_min.max(rect.x0), x_max.min(rect.x1))
+            };
+
+            if x_start >= x_end {
+                continue;
+            }
+
+            let row_offset = (y - rect.y0) as usize * w;
+            let py_vy = py * vy;
+            let py_vx = py * vx;
+
+            for x in x_start..x_end {
                 let px = f64::from(x) + 0.5 - a.center.x;
-                let py = f64::from(y) + 0.5 - a.center.y;
-                let t = if len <= dr.abs() {
-                    if dr > 0.0 { 1.0 } else { 0.0 }
+                let t = if len_le_dr {
+                    fixed_t
+                } else if dr == 0.0 {
+                    ((px * vx + py_vy) * inv_len_sq).clamp(0.0, 1.0)
                 } else {
-                    let along = (px * vx + py * vy) / len;
-                    let perpendicular = (px * vy - py * vx).abs() / len;
-                    ((along + dr * perpendicular / (len * len - dr * dr).sqrt()) / len).clamp(0.0, 1.0)
+                    let along = (px * vx + py_vy) * inv_len_sq;
+                    let perp = (px * vy - py_vx).abs();
+                    (along + perp * k).clamp(0.0, 1.0)
                 };
                 let dx = px - t * vx;
                 let dy = py - t * vy;
-                let distance = (dx * dx + dy * dy).sqrt();
+                let d2 = dx * dx + dy * dy;
                 let radius = f64::from(a.radius) + t * dr;
-                self.scratch.push(((radius + 0.5 - distance) as f32).clamp(0.0, 1.0));
+                let r_plus_half = radius + 0.5;
+                if d2 >= r_plus_half * r_plus_half {
+                    continue;
+                }
+                let distance = d2.sqrt();
+                let cov = (r_plus_half - distance) as f32;
+                if cov > 0.0 {
+                    self.scratch[row_offset + (x - rect.x0) as usize] = cov.min(1.0);
+                }
             }
         }
         self.cov.accumulate_with_union(rect, &self.scratch, d.opacity, None, None, true);

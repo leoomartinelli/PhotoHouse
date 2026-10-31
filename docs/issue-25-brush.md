@@ -8,7 +8,9 @@ A API pública que fornece carimbos mantém seu espaçamento para ferramentas se
 
 Ao concluir uma abertura interativa (incluindo background e prompts de perfil), e também uma abertura pela automação, a interface seleciona Move. Falhas de importação não alteram a ferramenta.
 
-Validação visual: `cargo run --release -p photocraft-paint --example verify_issue25` gera `issue-25-brush.ppm` e mede uma imagem materializada de 6000×6000 (36 MP). Comparação usa spacing 0.100001 para forçar a rota anterior e 0.1 para a nova, com o mesmo percurso e raio. Medição inicial nesta máquina: 112 ms anterior / 188 ms contínuo para o percurso completo. Esses números incluem composição incremental e são uma amostra, não uma garantia de latência. O custo maior exige acompanhamento em hardware de menor desempenho.
+Validação visual: `cargo run --release -p photocraft-paint --example verify_issue25` gera `issue-25-brush.ppm` e mede uma imagem materializada de 6000×6000 (36 MP). Comparação usa spacing 0.100001 para forçar a rota anterior e 0.1 para a nova, com o mesmo percurso e raio.
+Medição inicial: 112 ms anterior / 188 ms contínuo.
+Após otimização (faixa do traço sem sobreposição de caixas e pré-cálculo das constantes do loop analítico): 111.5 ms anterior / 103–105 ms contínuo para o percurso completo, superando a rota anterior sem perda de precisão geométrica. Esses números incluem composição incremental e são uma amostra, não uma garantia de latência.
 
 Testes adicionados: cápsula geométrica de referência (20/100/300 px, horizontal/diagonal, posições subpixel); equivalência entre eventos densos/esparsos; pressão; fallback de efeitos; preview com cauda e limite de opacidade; ferramenta após abertura bem-sucedida/falha e abertura por automação.
 
